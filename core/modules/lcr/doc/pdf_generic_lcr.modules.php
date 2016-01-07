@@ -669,7 +669,11 @@ class pdf_generic_lcr extends ModelePDFFactures {
 			$posy+=96;
 			
 			$ii++;
-			
+			$res_modulo = $ii%3;
+			if($res_modulo == 0) {
+				$pdf->AddPage();
+				$posy=50;
+			}
 			
 		}
 

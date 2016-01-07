@@ -279,6 +279,7 @@ if ($action == "builddoc" && $user->rights->facture->lire && ! GETPOST('button_s
 		
 		//$doc = new generic_pdf_lcr($db);
 		$TtoGenerate = $_REQUEST['toGenerate'];
+		$object = new Facture($db);
 		$result = lcr_pdf_create($db, $object, 'generic_lcr', $outputlangs, $hidedetails, $hidedesc, $hideref, $TtoGenerate);
 		
 		// Add all others
