@@ -40,8 +40,10 @@ class modlcr extends DolibarrModules
 	 */
 	function __construct($db)
 	{
-        global $langs,$conf;
-
+        global $langs,$conf, $langs;
+		
+		$langs->load('lcr@lcr');
+		
         $this->db = $db;
 
 		// Id for module (must be unique).

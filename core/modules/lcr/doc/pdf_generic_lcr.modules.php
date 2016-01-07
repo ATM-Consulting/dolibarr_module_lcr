@@ -181,6 +181,7 @@ class pdf_generic_lcr extends ModelePDFFactures {
 			
 			$f = new Facture($db);
 			$f->fetch('', $ref_piece);
+			$f->fetch_thirdparty();
 			$object = &$f;
 			
 			$curx=$this->marge_gauche;

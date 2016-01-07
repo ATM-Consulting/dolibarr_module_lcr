@@ -5,4 +5,5 @@ ATMAbout = Ce module a été développé par <a href="http://www.atm-consulting.
 
 lcrSetup = Configuration du module lcr
 lcrAbout = A propos du module lcr
+lcrMenuTitle = Gestion des LCR
 lcrTitle = Factures clients mode règlement "LCR"

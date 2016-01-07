@@ -358,6 +358,7 @@ $(document).ready(function() {
 	$("#checknonesend").click(function() {
 		$(".checkforsend").attr('checked', false);
 	});
+	$("#model").parent().children("*").hide();
 });
 </script>
 <?php
@@ -397,7 +398,7 @@ $sql.= " WHERE f.fk_soc = s.rowid";
 $sql.= " AND f.entity = ".$conf->entity;
 $sql.= " AND f.type IN (0,1,3) AND f.fk_statut = 1";
 $sql.= " AND fk_mode_reglement = 52";
-//$sql.= " AND f.paye = 0";
+$sql.= " AND f.paye = 0";
 //if ($option == 'late') $sql.=" AND f.date_lim_reglement < '".$db->idate(dol_now() - $conf->facture->client->warning_delay)."'";
 if (! $user->rights->societe->client->voir && ! $socid) $sql .= " AND s.rowid = sc.fk_soc AND sc.fk_user = " .$user->id;
 if (! empty($socid)) $sql .= " AND s.rowid = ".$socid;
@@ -541,7 +542,7 @@ if ($resql)
 	print_liste_field_titre($langs->trans("Status"),$_SERVER["PHP_SELF"],"fk_statut,paye,am","",$param,'align="right"',$sortfield,$sortorder);
 	if (empty($mode))
 	{
-		print_liste_field_titre($langs->trans("PDFMerge"),$_SERVER["PHP_SELF"],"","",$param,'align="center"',$sortfield,$sortorder);
+		print_liste_field_titre($langs->trans("Concat LCR"),$_SERVER["PHP_SELF"],"","",$param,'align="center"',$sortfield,$sortorder);
 	}
 	else
 	{
@@ -716,7 +717,7 @@ if ($resql)
 		print '<input type="hidden" name="option" value="'.$option.'">';
 		// We disable multilang because we concat already existing pdf.
 		//echo $filedir;exit;
-		$formfile->show_documents('lcr','',$filedir,$urlsource,$genallowed,$delallowed,'',1,1,0,48,1,$param,$langs->trans("PDFMerge"),$langs->trans("PDFMerge"));
+		$formfile->show_documents('lcr','',$filedir,$urlsource,$genallowed,$delallowed,'',1,1,0,48,1,$param,$langs->trans("Fichier LCR générés"),$langs->trans("Fusion LCR"));
 	}
 	else
 	{
