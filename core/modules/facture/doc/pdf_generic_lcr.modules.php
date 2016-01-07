@@ -118,7 +118,7 @@ class pdf_generic_lcr extends ModelePDFFactures {
 			else
 			{
 				$objectref = dol_sanitizeFileName($object->ref);
-				$dir = $conf->facture->dir_output . "/" . $objectref;
+				$dir = $conf->lcr->dir_output . "/" . $objectref;
 				$file = $dir . "/" . $objectref . ".pdf";
 			}
 			if (! file_exists($dir))
