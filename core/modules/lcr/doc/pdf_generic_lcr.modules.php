@@ -119,7 +119,7 @@ class pdf_generic_lcr extends ModelePDFFactures {
 			{
 				$objectref = dol_sanitizeFileName($object->ref);
 				$dir = $conf->lcr->dir_output . "/" . $objectref;
-				$file = $dir . "/" . $objectref . ".pdf";
+				$file = $dir . "/temp/" . 'lcr_'.date('YmdHis') . ".pdf";
 			}
 			if (! file_exists($dir))
 			{

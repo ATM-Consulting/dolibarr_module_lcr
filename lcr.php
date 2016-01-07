@@ -47,7 +47,7 @@ $builddoc_generatebutton=GETPOST('builddoc_generatebutton');
 if ($user->societe_id) $socid=$user->societe_id;
 $result = restrictedArea($user,'facture',$id,'');
 
-$diroutputpdf=$conf->facture->dir_output . '/unpaid/temp';
+$diroutputpdf=$conf->lcr->dir_output . '/temp';
 if (! $user->rights->societe->client->voir || $socid) $diroutputpdf.='/private/'.$user->id;	// If user has no permission to see all, output dir is specific to user
 
 $resultmasssend='';
@@ -275,11 +275,11 @@ if ($action == "builddoc" && $user->rights->facture->lire && ! GETPOST('button_s
 
         if (! empty($conf->global->MAIN_DISABLE_PDF_COMPRESSION)) $pdf->SetCompression(false);
 
-		dol_include_once('/core/modules/facture/modules_facture.php');
+		dol_include_once('/lcr/core/modules/lcr/modules_lcr.php');
 		
 		//$doc = new generic_pdf_lcr($db);
 		$object = new Facture($db);
-		$result = facture_pdf_create($db, $object, 'generic_lcr', $outputlangs, $hidedetails, $hidedesc, $hideref);
+		$result = lcr_pdf_create($db, $object, 'generic_lcr', $outputlangs, $hidedetails, $hidedesc, $hideref);
 		
 		// Add all others
 		foreach($files as $file)
@@ -722,7 +722,8 @@ if ($resql)
 		print '<br>';
 		print '<input type="hidden" name="option" value="'.$option.'">';
 		// We disable multilang because we concat already existing pdf.
-		$formfile->show_documents('unpaid','',$filedir,$urlsource,$genallowed,$delallowed,'',1,1,0,48,1,$param,$langs->trans("PDFMerge"),$langs->trans("PDFMerge"));
+		//echo $filedir;exit;
+		$formfile->show_documents('lcr','',$filedir,$urlsource,$genallowed,$delallowed,'',1,1,0,48,1,$param,$langs->trans("PDFMerge"),$langs->trans("PDFMerge"));
 	}
 	else
 	{
