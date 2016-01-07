@@ -275,6 +275,12 @@ if ($action == "builddoc" && $user->rights->facture->lire && ! GETPOST('button_s
 
         if (! empty($conf->global->MAIN_DISABLE_PDF_COMPRESSION)) $pdf->SetCompression(false);
 
+		dol_include_once('/core/modules/facture/modules_facture.php');
+		
+		//$doc = new generic_pdf_lcr($db);
+		$object = new Facture($db);
+		$result = facture_pdf_create($db, $object, 'generic_lcr', $outputlangs, $hidedetails, $hidedesc, $hideref);
+		
 		// Add all others
 		foreach($files as $file)
 		{
