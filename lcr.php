@@ -309,15 +309,8 @@ if ($action == "builddoc" && $user->rights->facture->lire && ! GETPOST('button_s
 			if (! empty($conf->global->MAIN_UMASK))
 			@chmod($file, octdec($conf->global->MAIN_UMASK));
 		}
-		else
-		{
-			setEventMessage($langs->trans('NoPDFAvailableForChecked'),'errors');
-		}
 	}
-	else
-	{
-		setEventMessage($langs->trans('InvoiceNotChecked'), 'warnings');
-	}
+
 }
 
 // Remove file

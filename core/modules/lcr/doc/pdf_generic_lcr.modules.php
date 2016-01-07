@@ -448,13 +448,25 @@ class pdf_generic_lcr extends ModelePDFFactures {
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'',6);
 			$pdf->MultiCell($largeur_cadre*2, 4, "Signature du tireur",0,C);
 
-			$pdf->Line(0,103,$this->page_largeur, 103);		
-			$pdf->SetXY($this->page_largeur-65,100);
+			$pdf->Line(0,$cury+40,$this->page_largeur, $cury+40);		
+			$pdf->SetXY($curx+100, $cury+36);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'',6);
 			$pdf->MultiCell(50, 4, "Ne rien inscrire au dessous de cette ligne",0,R);
 		
-			$posy+=80;
-		
+			$posy+=96;
+			
+			$ii++;
+			
+			$res_modulo = $ii%3;
+			if($res_modulo == 1 && $ii >= 4) {
+				$pdf->AddPage('','',true);
+				if (! empty($tplidx)) $pdf->useTemplate($tplidx);
+				$posy =50;
+				$pdf->SetDrawColor(0,0,0);
+			
+				$default_font_size = pdf_getPDFFontSize($outputlangs);
+			}
+			
 		}
 
 //fin mb ///////////
