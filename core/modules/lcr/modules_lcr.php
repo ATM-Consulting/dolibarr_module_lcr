@@ -154,7 +154,7 @@ abstract class ModeleNumRefLCR
  *  @param  int			$hideref        Hide ref
  *	@return int        					<0 if KO, >0 if OK
  */
-function lcr_pdf_create($db, $object, $modele, $outputlangs, $hidedetails=0, $hidedesc=0, $hideref=0)
+function lcr_pdf_create($db, $object, $modele, $outputlangs, $hidedetails=0, $hidedesc=0, $hideref=0, &$TtoGenerate)
 {
 	global $conf,$user,$langs;
 
@@ -231,13 +231,13 @@ function lcr_pdf_create($db, $object, $modele, $outputlangs, $hidedetails=0, $hi
 		// We save charset_output to restore it because write_file can change it if needed for
 		// output format that does not support UTF8.
 		$sav_charset_output=$outputlangs->charset_output;
-		if ($obj->write_file($object, $outputlangs, $srctemplatepath, $hidedetails, $hidedesc, $hideref) > 0)
+		if ($obj->write_file($object, $outputlangs, $srctemplatepath, $hidedetails, $hidedesc, $hideref, $TtoGenerate) > 0)
 		{
 			$outputlangs->charset_output=$sav_charset_output;
 
 			// We delete old preview
 			require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
-			dol_delete_preview($object);
+			//dol_delete_preview($object);
 
 			// Success in building document. We build meta file.
 			dol_meta_create($object);

@@ -87,7 +87,7 @@ class pdf_generic_lcr extends ModelePDFFactures {
 		$this->atleastonediscount=0;
 	}
 
-	function write_file($object,$outputlangs,$srctemplatepath='',$hidedetails=0,$hidedesc=0,$hideref=0)
+	function write_file($object,$outputlangs,$srctemplatepath='',$hidedetails=0,$hidedesc=0,$hideref=0, &$TtoGenerate)
 	{
 		global $user,$langs,$conf,$mysoc,$db,$hookmanager;
 
@@ -103,24 +103,11 @@ class pdf_generic_lcr extends ModelePDFFactures {
 
 		if ($conf->facture->dir_output)
 		{
-			$object->fetch_thirdparty();
-
-			$deja_regle = $object->getSommePaiement();
-			$amount_credit_notes_included = $object->getSumCreditNotesUsed();
-			$amount_deposits_included = $object->getSumDepositsUsed();
-
-			// Definition of $dir and $file
-			if ($object->specimen)
-			{
-				$dir = $conf->facture->dir_output;
-				$file = $dir . "/SPECIMEN.pdf";
-			}
-			else
-			{
-				$objectref = dol_sanitizeFileName($object->ref);
-				$dir = $conf->lcr->dir_output . "/" . $objectref;
-				$file = $dir . "/temp/" . 'lcr_'.date('YmdHis') . ".pdf";
-			}
+			
+			
+			$dir = $conf->lcr->dir_output . "/";
+			$file = $dir . "" . 'lcr_'.date('YmdHis') . ".pdf";
+			
 			if (! file_exists($dir))
 			{
 				if (dol_mkdir($dir) < 0)
@@ -141,7 +128,7 @@ class pdf_generic_lcr extends ModelePDFFactures {
 	            $heightforfooter = $this->marge_basse + 8;	// Height reserved to output the footer (value include bottom margin)
                 $pdf->SetAutoPageBreak(1,0);
 
-				$this->_showLCR($pdf, $object, $outputlangs);
+				$this->_showLCR($pdf, $object, $outputlangs, $TtoGenerate);
 
 				$pdf->Close();
 
@@ -178,19 +165,24 @@ class pdf_generic_lcr extends ModelePDFFactures {
 		return 0;   // Erreur par defaut
 	}
 
-	function _showLCR($pdf, $object, $outputlangs)
+	function _showLCR($pdf, $object, $outputlangs, &$TtoGenerate)
 	{
-		global $conf;
+		global $db, $conf;
 		
 		//Gestion LCR /////////////////////////////////////////////////////////////////////
-	   	if ($object->mode_reglement_code == 'LCR' || $object->mode_reglement_code == 'LCRD')
-		{
-			$pdf->AddPage();
-			$posy =50;
-			$pdf->SetDrawColor(0,0,0);
+	   	
+		$pdf->AddPage();
+		$posy =50;
+		$pdf->SetDrawColor(0,0,0);
+	
+		$default_font_size = pdf_getPDFFontSize($outputlangs);
 		
-			$default_font_size = pdf_getPDFFontSize($outputlangs);
-		
+		foreach($TtoGenerate as $ii => $ref_piece) {
+			
+			$f = new Facture($db);
+			$f->fetch('', $ref_piece);
+			$object = &$f;
+			
 			$curx=$this->marge_gauche;
 			$cury=$posy-30;			   
 			$pdf->SetFont('','', $default_font_size - 1);
@@ -460,8 +452,11 @@ class pdf_generic_lcr extends ModelePDFFactures {
 			$pdf->SetXY($this->page_largeur-65,100);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'',6);
 			$pdf->MultiCell(50, 4, "Ne rien inscrire au dessous de cette ligne",0,R);
-
+		
+			$posy+=80;
+		
 		}
+
 //fin mb ///////////
 	}
 	

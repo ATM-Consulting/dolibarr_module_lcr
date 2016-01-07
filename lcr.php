@@ -47,7 +47,7 @@ $builddoc_generatebutton=GETPOST('builddoc_generatebutton');
 if ($user->societe_id) $socid=$user->societe_id;
 $result = restrictedArea($user,'facture',$id,'');
 
-$diroutputpdf=$conf->lcr->dir_output . '/temp';
+$diroutputpdf=$conf->lcr->dir_output;
 if (! $user->rights->societe->client->voir || $socid) $diroutputpdf.='/private/'.$user->id;	// If user has no permission to see all, output dir is specific to user
 
 $resultmasssend='';
@@ -278,11 +278,11 @@ if ($action == "builddoc" && $user->rights->facture->lire && ! GETPOST('button_s
 		dol_include_once('/lcr/core/modules/lcr/modules_lcr.php');
 		
 		//$doc = new generic_pdf_lcr($db);
-		$object = new Facture($db);
-		$result = lcr_pdf_create($db, $object, 'generic_lcr', $outputlangs, $hidedetails, $hidedesc, $hideref);
+		$TtoGenerate = $_REQUEST['toGenerate'];
+		$result = lcr_pdf_create($db, $object, 'generic_lcr', $outputlangs, $hidedetails, $hidedesc, $hideref, $TtoGenerate);
 		
 		// Add all others
-		foreach($files as $file)
+		/*foreach($files as $file)
 		{
 			// Charge un document PDF depuis un fichier.
 			$pagecount = $pdf->setSourceFile($file);
@@ -293,7 +293,7 @@ if ($action == "builddoc" && $user->rights->facture->lire && ! GETPOST('button_s
 				$pdf->AddPage($s['h'] > $s['w'] ? 'P' : 'L');
 				$pdf->useTemplate($tplidx);
 			}
-		}
+		}*/
 
 		// Create output dir if not exists
 		dol_mkdir($diroutputpdf);
