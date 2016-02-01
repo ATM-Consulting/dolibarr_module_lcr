@@ -8,5 +8,6 @@ lcrAbout = A propos du module lcr
 lcrMenuTitle = Gestion des LCR
 lcrTitle = Factures clients mode règlement "LCR"
 
-lcr_generateOneLcrPerPageWithAddress=Générer 1 seul LCR par page avec entête de facture (si non alors impression de 3 LCR par page)
+lcr_generateOneLcrPerPageWithAddress=Générer 1 seul LCR par page avec entête de facture (sinon impression de 3 LCR par page)
 lcr_useRestToPay=Reprendre uniquement le reste à payer
+lcr_paiementMode=Mode de règlement sur lequel la liste de factures est filtrée
