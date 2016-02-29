@@ -580,6 +580,8 @@ class pdf_generic_lcr extends ModelePDFFactures {
 			$sql = "SELECT rib.fk_soc, rib.domiciliation, rib.code_banque, rib.code_guichet, rib.number, rib.cle_rib";
 			$sql.= " FROM ".MAIN_DB_PREFIX ."societe_rib as rib";
 			$sql.= " WHERE rib.fk_soc = ".$object->client->id;
+			$sql.= ' ORDER BY default_rib DESC LIMIT 1'; // On veux en priorité le RIB par défaut si jamais on tombe sur le cas de +sieurs RIB mais pas de default alors on en prend qu'un
+			
 			$resql=$this->db->query($sql);
 			if ($resql)
 			{
