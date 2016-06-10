@@ -115,12 +115,12 @@ function generateCSV() {
 	
 	fputcsv($f, $TTitle, ';');
 	
-	$f = new Facture($db);
+	$fact = new Facture($db);
 	$s = new Societe($db);
 		
 	foreach($TFactRef as $ref_fact) {
 
-		if($f->fetch('', $ref_fact) > 0 && $s->fetch($f->socid) > 0) {
+		if($fact->fetch('', $ref_fact) > 0 && $s->fetch($fact->socid) > 0) {
 			
 			$rib = $s->get_all_rib();
 			
@@ -138,12 +138,12 @@ function generateCSV() {
 							,$s->idprof1
 							,$rib[0]->number
 							,'' // Agence
-							,price($f->total_ttc)
+							,price($fact->total_ttc)
 							,'E'
 							,1
 							,$ref_fact
-							,date('d/m/Y')
-							,date('d/m/Y', $f->date_lim_reglement)
+							,date('d/m/Y', $fact->date)
+							,date('d/m/Y', $fact->date_lim_reglement)
 						  )
 					, ';'
 				);
