@@ -80,3 +80,77 @@ function lcrAdminPrepareHead()
 
     return $head;
 }
+
+function generateCSV() {
+	
+	global $db, $conf;
+	
+	$TFactRef = $_REQUEST['toGenerate'];
+	
+	// Création et attribution droits fichier
+	$dir = $conf->lcr->dir_output;
+	$filename = 'lcr_'.date('YmdHis').'.csv';
+	$f = fopen($dir.'/'.$filename, 'w+');
+	chmod($dir.'/'.$filename, 0777);
+	
+	$TTitle = array(
+						'Code client'
+						,'Raison sociale'
+						,'Adresse 1'
+						,'Adresse 2'
+						,'Code postal'
+						,'Ville'
+						,'Téléphone'
+						,'Référence'
+						,'SIREN'
+						,'RIB'
+						,'Agence'
+						,'Montant'
+						,'Monnaie'
+						,'Accepté'
+						,'Référence'
+						,'Date de création'
+						,'Date d\'échéance'
+					);
+	
+	fputcsv($f, $TTitle, ';');
+	
+	$f = new Facture($db);
+	$s = new Societe($db);
+		
+	foreach($TFactRef as $ref_fact) {
+
+		if($f->fetch('', $ref_fact) > 0 && $s->fetch($f->socid) > 0) {
+			
+			$rib = $s->get_all_rib();
+			
+			fputcsv(
+					$f
+					,array(
+							$s->code_client
+							,$s->name
+							,$s->address
+							,'' // Adresse 2
+							,$s->zip
+							,$s->town
+							,$s->phone
+							,$ref_fact
+							,$s->idprof1
+							,$rib[0]->number
+							,'' // Agence
+							,price($f->total_ttc)
+							,'E'
+							,1
+							,$ref_fact
+							,date('d/m/Y')
+							,date('d/m/Y', $f->date_lim_reglement)
+						  )
+					, ';'
+				);
+		}
+		
+	}
+	
+	fclose($f);
+	
+}
