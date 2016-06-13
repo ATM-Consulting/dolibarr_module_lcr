@@ -136,7 +136,7 @@ function generateCSV() {
 							,$s->phone
 							,$ref_fact
 							,$s->idprof1
-							,$rib[0]->number
+							,$rib[0]->iban
 							,'' // Agence
 							,price($fact->total_ttc)
 							,'E'
