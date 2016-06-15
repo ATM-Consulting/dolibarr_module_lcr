@@ -33,6 +33,7 @@ require_once DOL_DOCUMENT_ROOT.'/compta/facture/class/facture.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/paiement/class/paiement.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/pdf.lib.php';
+dol_include_once('/lcr/lib/lcr.lib.php');
 
 $langs->load("mails");
 $langs->load("bills");
@@ -312,6 +313,10 @@ if ($action == "builddoc" && $user->rights->facture->lire && ! GETPOST('button_s
 		}
 	}
 
+} elseif(is_array($_POST['toGenerate']) && isset($_REQUEST['generateCSV'])) {
+		
+	generateCSV();
+	
 }
 
 // Remove file
@@ -722,6 +727,17 @@ if ($resql)
 		// We disable multilang because we concat already existing pdf.
 		//echo $filedir;exit;
 		$formfile->show_documents('lcr','',$filedir,$urlsource,$genallowed,$delallowed,'',1,1,0,48,1,$param,$langs->trans("Fichier LCR générés"),$langs->trans("Fusion LCR"));
+		
+		?>
+		
+			<script type="text/javascript">
+				
+				$("#builddoc_generatebutton").parent().append(' <input class="button" type="SUBMIT" name="generateCSV" value="Générer CSV">');
+				
+			</script>
+		
+		<?php
+		
 	}
 	else
 	{
