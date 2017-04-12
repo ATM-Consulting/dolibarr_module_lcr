@@ -258,7 +258,7 @@ if ($action == "builddoc" && $user->rights->facture->lire && ! GETPOST('button_s
         $outputlangs = $langs;
         $newlang='';
         if ($conf->global->MAIN_MULTILANGS && empty($newlang) && GETPOST('lang_id')) $newlang=GETPOST('lang_id');
-        if ($conf->global->MAIN_MULTILANGS && empty($newlang)) $newlang=$object->client->default_lang;
+        if ($conf->global->MAIN_MULTILANGS && empty($newlang)) $newlang=! empty($object->thirdparty->default_lang) ? $object->thirdparty->default_lang : $object->client->default_lang;
         if (! empty($newlang))
         {
             $outputlangs = new Translate("",$conf);

@@ -365,6 +365,12 @@ class pdf_generic_lcr extends ModelePDFFactures {
 			$f->fetch_thirdparty();
 			$object = &$f;
 			
+			// Compatibilité Dolibarr <= 3.9
+			if(empty($object->client) && ! empty($object->thirdparty))
+			{
+				$object->client = $object->thirdparty;
+			}
+
 			if (!empty($conf->global->LCR_USE_REST_TO_PAY))
 			{
 				$deja_regle = $object->getSommePaiement();
