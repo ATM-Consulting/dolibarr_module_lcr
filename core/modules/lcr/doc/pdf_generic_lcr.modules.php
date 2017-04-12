@@ -412,13 +412,11 @@ class pdf_generic_lcr extends ModelePDFFactures {
 			$pdf->writeHTMLCell(53, 20, 10, $cury-8, $outputlangs->convToOutputCharset('MERCI DE NOUS RETOURNER LA PRESENTE TRAITE SOUS 8 JOURS.'), 0, 1, false, true, 'J',true);
 			
 			$pdf->SetFont('','', $default_font_size - 3);
-			$pdf->writeHTMLCell(40, 20, 70, $cury-8, $outputlangs->convToOutputCharset('Contre cette LETTRE DE CHANGE STIPULEE SANS FRAIS'), 0, 1, false, true, 'J',true);
-			$pdf->writeHTMLCell(40, 20, 70, $cury-3, $outputlangs->convToOutputCharset('Veuillez payer la somme indiquée ci_dessous à l\'ordre de'), 0, 1, false, true, 'J',true);
+			$pdf->writeHTMLCell(45, 20, 68, $cury-8, $outputlangs->convToOutputCharset('Contre cette LETTRE DE CHANGE STIPULEE SANS FRAIS').'<br>'.$outputlangs->convToOutputCharset('Veuillez payer la somme indiquée ci-dessous à l\'ordre de'), 0, 1, false, true, 'J',true);
 			
 			$pdf->SetFont('','', $default_font_size - 2);
-			$pdf->writeHTMLCell(20, 20, 115, $cury-8, $outputlangs->convToOutputCharset($conf->global->MAIN_INFO_SOCIETE_NOM), 0, 1, false, true, 'J',true);
-			$pdf->writeHTMLCell(40, 20, 115, $cury-5, $outputlangs->convToOutputCharset($conf->global->MAIN_INFO_SOCIETE_ADDRESS), 0, 1, false, true, 'J',true);
-			$pdf->writeHTMLCell(40, 20, 115, $cury+1, $outputlangs->convToOutputCharset($conf->global->MAIN_INFO_SOCIETE_ZIP.' '.$conf->global->MAIN_INFO_SOCIETE_TOWN), 0, 1, false, true, 'J',true);
+			$adresse = $outputlangs->convToOutputCharset($conf->global->MAIN_INFO_SOCIETE_NOM) . '<br>' . nl2br($conf->global->MAIN_INFO_SOCIETE_ADDRESS) . '<br>' . $outputlangs->convToOutputCharset($conf->global->MAIN_INFO_SOCIETE_ZIP.' '.$conf->global->MAIN_INFO_SOCIETE_TOWN);
+			$pdf->writeHTMLCell(50, 20, 120, $cury-8, $adresse, 0, 1, false, true, 'J',true);
 
 			//Affichage code monnaie 
 			$pdf->SetXY(180, $cury+1);
@@ -611,8 +609,8 @@ class pdf_generic_lcr extends ModelePDFFactures {
 					$pdf->SetXY($curx, $cury+$hauteur_cadre-1);
 					$pdf->SetFont(pdf_getPDFFont($outputlangs),'',6);
 					$pdf->Cell($largeur_cadre, 1, "Code établissement    Code guichet           N° de compte            Cl RIB",0,0,L);
-					$curx=150;				
-					$largeur_cadre=55;
+					$curx=136;
+					$largeur_cadre=68;
 					$pdf->SetXY($curx, $cury-1);
 					$pdf->SetFont(pdf_getPDFFont($outputlangs),'',6);
 					$pdf->Cell($largeur_cadre, 1, "Domiciliation bancaire",0,0,C);
