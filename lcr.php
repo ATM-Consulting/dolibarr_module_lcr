@@ -364,7 +364,6 @@ $(document).ready(function() {
 	$("#checknonesend").click(function() {
 		$(".checkforsend").attr('checked', false);
 	});
-	$("#model").parent().children("*").hide();
 });
 </script>
 <?php
