@@ -353,6 +353,7 @@ $dolibarr_version = (float) DOL_VERSION;
 ?>
 <script type="text/javascript">
 $(document).ready(function() {
+	var version = <?php echo $dolibarr_version; ?>;
 	$("#checkall").click(function() {
 		$(".checkformerge").attr('checked', true);
 	});
@@ -365,19 +366,12 @@ $(document).ready(function() {
 	$("#checknonesend").click(function() {
 		$(".checkforsend").attr('checked', false);
 	});
-<?php if ($dolibarr_version < 4) { ?>
-	$("#model").parent().children().hide();
-<?php } else { ?>
-	$('#model').siblings('span.hideonsmartphone').hide();
-	$(document).on('select2:change', '#s2id_model', function() { // #s2id_model apparaît par JS plus tard, il faut le choper au vol
-		$(this).remove();
-		if($('#s2id_model').length == 0) clearInterval(removeS2Interval); // Si la suppression a marché, on arrête la boucle
-	});
-	var removeS2Interval = setInterval(function() { // on boucle toutes les 20 ms
-		$('#s2id_model').trigger('select2:change'); // on déclenche le change pour provoquer la suppression
-	}, 20);
-	$('input[name=generateCSV]').addClass('buttongen'); 
-<?php } ?>
+	if(version < 4) {
+		$("#model").parent().children().hide();
+	} else {
+		$('#model').parent().find('.hideonsmartphone').remove();
+		$('#model').remove();
+	}
 });
 </script>
 <?php
