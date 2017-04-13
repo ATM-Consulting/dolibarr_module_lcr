@@ -138,7 +138,7 @@ function generateCSV() {
 							,$s->idprof1
 							,$rib[0]->iban
 							,'' // Agence
-							,number_format($fact->total_ttc, 2, '.', '') // On évite des problèmes avec les virgules
+							,price($fact->total_ttc)
 							,'E'
 							,1
 							,$ref_fact
