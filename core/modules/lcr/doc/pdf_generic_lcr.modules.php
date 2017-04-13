@@ -365,6 +365,12 @@ class pdf_generic_lcr extends ModelePDFFactures {
 			$f->fetch_thirdparty();
 			$object = &$f;
 			
+			// Compatibilité Dolibarr >= 4.0
+			if(empty($object->client) && ! empty($object->thirdparty))
+			{
+				$object->client = $object->thirdparty;
+			}
+
 			if (!empty($conf->global->LCR_USE_REST_TO_PAY))
 			{
 				$deja_regle = $object->getSommePaiement();
@@ -406,13 +412,11 @@ class pdf_generic_lcr extends ModelePDFFactures {
 			$pdf->writeHTMLCell(53, 20, 10, $cury-8, $outputlangs->convToOutputCharset('MERCI DE NOUS RETOURNER LA PRESENTE TRAITE SOUS 8 JOURS.'), 0, 1, false, true, 'J',true);
 			
 			$pdf->SetFont('','', $default_font_size - 3);
-			$pdf->writeHTMLCell(40, 20, 70, $cury-8, $outputlangs->convToOutputCharset('Contre cette LETTRE DE CHANGE STIPULEE SANS FRAIS'), 0, 1, false, true, 'J',true);
-			$pdf->writeHTMLCell(40, 20, 70, $cury-3, $outputlangs->convToOutputCharset('Veuillez payer la somme indiquée ci_dessous à l\'ordre de'), 0, 1, false, true, 'J',true);
+			$pdf->writeHTMLCell(45, 20, 68, $cury-8, $outputlangs->convToOutputCharset('Contre cette LETTRE DE CHANGE STIPULEE SANS FRAIS').'<br>'.$outputlangs->convToOutputCharset('Veuillez payer la somme indiquée ci-dessous à l\'ordre de'), 0, 1, false, true, 'J',true);
 			
 			$pdf->SetFont('','', $default_font_size - 2);
-			$pdf->writeHTMLCell(20, 20, 115, $cury-8, $outputlangs->convToOutputCharset($conf->global->MAIN_INFO_SOCIETE_NOM), 0, 1, false, true, 'J',true);
-			$pdf->writeHTMLCell(40, 20, 115, $cury-5, $outputlangs->convToOutputCharset($conf->global->MAIN_INFO_SOCIETE_ADDRESS), 0, 1, false, true, 'J',true);
-			$pdf->writeHTMLCell(40, 20, 115, $cury+1, $outputlangs->convToOutputCharset($conf->global->MAIN_INFO_SOCIETE_ZIP.' '.$conf->global->MAIN_INFO_SOCIETE_TOWN), 0, 1, false, true, 'J',true);
+			$adresse = $outputlangs->convToOutputCharset($conf->global->MAIN_INFO_SOCIETE_NOM) . '<br>' . nl2br($conf->global->MAIN_INFO_SOCIETE_ADDRESS) . '<br>' . $outputlangs->convToOutputCharset($conf->global->MAIN_INFO_SOCIETE_ZIP.' '.$conf->global->MAIN_INFO_SOCIETE_TOWN);
+			$pdf->writeHTMLCell(50, 20, 120, $cury-8, $adresse, 0, 1, false, true, 'J',true);
 
 			//Affichage code monnaie 
 			$pdf->SetXY(180, $cury+1);
@@ -605,8 +609,8 @@ class pdf_generic_lcr extends ModelePDFFactures {
 					$pdf->SetXY($curx, $cury+$hauteur_cadre-1);
 					$pdf->SetFont(pdf_getPDFFont($outputlangs),'',6);
 					$pdf->Cell($largeur_cadre, 1, "Code établissement    Code guichet           N° de compte            Cl RIB",0,0,L);
-					$curx=150;				
-					$largeur_cadre=55;
+					$curx=136;
+					$largeur_cadre=68;
 					$pdf->SetXY($curx, $cury-1);
 					$pdf->SetFont(pdf_getPDFFont($outputlangs),'',6);
 					$pdf->Cell($largeur_cadre, 1, "Domiciliation bancaire",0,0,C);
@@ -633,10 +637,21 @@ class pdf_generic_lcr extends ModelePDFFactures {
 			$pdf->Line($curx+$largeur_cadre+6, $cury+2, $curx+$largeur_cadre+5, $cury+3);
 			// fin jolie fl�che
 
-			//Coordonn�es du tir�
 			$curx+=50;
 			$largeur_cadre=20;
 			$hauteur_cadre=6;
+
+			// Signature du tireur
+			$pdf->SetXY($curx+$largeur_cadre*5, $cury);
+			$pdf->SetFont(pdf_getPDFFont($outputlangs),'',6);
+			$pdf->MultiCell($largeur_cadre*2, 4, "Signature du tireur",0,C);
+			
+			$pdf->Line(0,$cury+40,$this->page_largeur, $cury+40);
+			$pdf->SetXY($curx+100, $cury+36);
+			$pdf->SetFont(pdf_getPDFFont($outputlangs),'',6);
+			$pdf->MultiCell(50, 4, "Ne rien inscrire au dessous de cette ligne",0,R);
+
+			// Coordonnées du tiré
 			$pdf->SetXY($curx, $cury);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'',6);
 			$pdf->MultiCell($largeur_cadre, $hauteur_cadre, "Nom\n et Adresse\n du tiré",0,R);
@@ -647,22 +662,15 @@ class pdf_generic_lcr extends ModelePDFFactures {
 			$carac_client.="\n".$outputlangs->convToOutputCharset(!empty($object->client->address) ? $object->client->address : $object->client->adresse);
 			$carac_client.="\n".$outputlangs->convToOutputCharset(!empty($object->client->zip) ? $object->client->zip : $object->client->cp) . " " . $outputlangs->convToOutputCharset(!empty($object->client->town) ? $object->client->town : $object->client->ville)."\n";
 			$pdf->MultiCell($largeur_cadre*2.5, $hauteur_cadre, $carac_client,1,C);
-			//N� Siren
-			$pdf->SetXY($curx, $cury+16);
+
+			// N° Siren
+			$cury = $pdf->GetY() + 4; // Le précédent MultiCell change le Y courant. On rajoute 4 pour le démarrer systématiquement le cadre SIREN en dessous
+			$pdf->SetXY($curx, $cury);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'',6);
 			$pdf->MultiCell($largeur_cadre, 4, "N° SIREN du tiré",0,R);
-			$pdf->SetXY($curx+$largeur_cadre+2, $cury+15.5);
+			$pdf->SetXY($curx+$largeur_cadre+2, $cury-0.5);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'B',8);
 			$pdf->MultiCell($largeur_cadre*2.5, 4, $outputlangs->convToOutputCharset(empty($object->client->siren) ? $object->client->idprof1 : $object->client->siren),1,C);
-			//signature du tireur
-			$pdf->SetXY($curx+$largeur_cadre*5, $cury);
-			$pdf->SetFont(pdf_getPDFFont($outputlangs),'',6);
-			$pdf->MultiCell($largeur_cadre*2, 4, "Signature du tireur",0,C);
-
-			$pdf->Line(0,$cury+40,$this->page_largeur, $cury+40);		
-			$pdf->SetXY($curx+100, $cury+36);
-			$pdf->SetFont(pdf_getPDFFont($outputlangs),'',6);
-			$pdf->MultiCell(50, 4, "Ne rien inscrire au dessous de cette ligne",0,R);
 		
 			
 			
