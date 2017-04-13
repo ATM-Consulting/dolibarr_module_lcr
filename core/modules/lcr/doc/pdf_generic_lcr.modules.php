@@ -365,7 +365,7 @@ class pdf_generic_lcr extends ModelePDFFactures {
 			$f->fetch_thirdparty();
 			$object = &$f;
 			
-			// Compatibilité Dolibarr <= 3.9
+			// Compatibilité Dolibarr >= 4.0
 			if(empty($object->client) && ! empty($object->thirdparty))
 			{
 				$object->client = $object->thirdparty;
@@ -637,10 +637,21 @@ class pdf_generic_lcr extends ModelePDFFactures {
 			$pdf->Line($curx+$largeur_cadre+6, $cury+2, $curx+$largeur_cadre+5, $cury+3);
 			// fin jolie fl�che
 
-			//Coordonn�es du tir�
 			$curx+=50;
 			$largeur_cadre=20;
 			$hauteur_cadre=6;
+
+			// Signature du tireur
+			$pdf->SetXY($curx+$largeur_cadre*5, $cury);
+			$pdf->SetFont(pdf_getPDFFont($outputlangs),'',6);
+			$pdf->MultiCell($largeur_cadre*2, 4, "Signature du tireur",0,C);
+			
+			$pdf->Line(0,$cury+40,$this->page_largeur, $cury+40);
+			$pdf->SetXY($curx+100, $cury+36);
+			$pdf->SetFont(pdf_getPDFFont($outputlangs),'',6);
+			$pdf->MultiCell(50, 4, "Ne rien inscrire au dessous de cette ligne",0,R);
+
+			// Coordonnées du tiré
 			$pdf->SetXY($curx, $cury);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'',6);
 			$pdf->MultiCell($largeur_cadre, $hauteur_cadre, "Nom\n et Adresse\n du tiré",0,R);
@@ -651,22 +662,15 @@ class pdf_generic_lcr extends ModelePDFFactures {
 			$carac_client.="\n".$outputlangs->convToOutputCharset(!empty($object->client->address) ? $object->client->address : $object->client->adresse);
 			$carac_client.="\n".$outputlangs->convToOutputCharset(!empty($object->client->zip) ? $object->client->zip : $object->client->cp) . " " . $outputlangs->convToOutputCharset(!empty($object->client->town) ? $object->client->town : $object->client->ville)."\n";
 			$pdf->MultiCell($largeur_cadre*2.5, $hauteur_cadre, $carac_client,1,C);
-			//N� Siren
-			$pdf->SetXY($curx, $cury+16);
+
+			// N° Siren
+			$cury = $pdf->GetY() + 4; // Le précédent MultiCell change le Y courant. On rajoute 4 pour le démarrer systématiquement le cadre SIREN en dessous
+			$pdf->SetXY($curx, $cury);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'',6);
 			$pdf->MultiCell($largeur_cadre, 4, "N° SIREN du tiré",0,R);
-			$pdf->SetXY($curx+$largeur_cadre+2, $cury+15.5);
+			$pdf->SetXY($curx+$largeur_cadre+2, $cury-0.5);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'B',8);
 			$pdf->MultiCell($largeur_cadre*2.5, 4, $outputlangs->convToOutputCharset(empty($object->client->siren) ? $object->client->idprof1 : $object->client->siren),1,C);
-			//signature du tireur
-			$pdf->SetXY($curx+$largeur_cadre*5, $cury);
-			$pdf->SetFont(pdf_getPDFFont($outputlangs),'',6);
-			$pdf->MultiCell($largeur_cadre*2, 4, "Signature du tireur",0,C);
-
-			$pdf->Line(0,$cury+40,$this->page_largeur, $cury+40);		
-			$pdf->SetXY($curx+100, $cury+36);
-			$pdf->SetFont(pdf_getPDFFont($outputlangs),'',6);
-			$pdf->MultiCell(50, 4, "Ne rien inscrire au dessous de cette ligne",0,R);
 		
 			
 			
