@@ -144,7 +144,7 @@ function generateCSV() {
 							,$s->idprof1
 							,$rib[0]->iban
 							,'' // Agence
-							,price($fact->total_ttc-$fact->getSommePaiement())
+							,price($total_facture-$fact->getSommePaiement())
 							,'E'
 							,1
 							,$ref_fact
