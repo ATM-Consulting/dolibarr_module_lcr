@@ -124,6 +124,12 @@ function generateCSV() {
 			
 			$rib = $s->get_all_rib();
 			
+			$total_facture = $fact->total_ttc;
+			if($conf->global->FACTURE_DEPOSITS_ARE_JUST_PAYMENTS){
+				$total_facture -= $fact->getSumCreditNotesUsed();
+				$total_facture -= $fact->getSumDepositsUsed();
+			}
+			
 			fputcsv(
 					$f
 					,array(
