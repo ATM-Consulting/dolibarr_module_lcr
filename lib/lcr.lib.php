@@ -123,7 +123,17 @@ function generateCSV() {
 		if($fact->fetch('', $ref_fact) > 0 && $s->fetch($fact->socid) > 0) {
 			
 			$rib = $s->get_all_rib();
-			
+			$iban='';
+			if(!empty($rib)) {
+				$iban = $rib[0]->iban;
+				foreach($rib as $i_rib=>&$obj_rib) {
+					if(!empty($obj_rib->default_rib)) {
+						$iban = $obj_rib->iban;
+						break;
+					}
+				}
+			}
+
 			$total_facture = $fact->total_ttc;
 			$total_facture -= $fact->getSumCreditNotesUsed();
 			$total_facture -= $fact->getSumDepositsUsed();
@@ -140,7 +150,7 @@ function generateCSV() {
 							,$s->phone
 							,$ref_fact
 							,$s->idprof1
-							,$rib[0]->iban
+							,$iban
 							,'' // Agence
 							,price($total_facture-$fact->getSommePaiement())
 							,'E'
