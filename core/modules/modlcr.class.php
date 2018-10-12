@@ -195,11 +195,11 @@ class modlcr extends DolibarrModules
 		// Add here entries to declare new menus
 		//
 		// Example to declare a new Top Menu entry and its Left menu entry:
-		$this->menu[$r]=array(	'fk_menu'=>'fk_mainmenu=accountancy,fk_leftmenu=customers_bills',			                // Put 0 if this is a top menu
+		$this->menu[$r]=array(	'fk_menu'=>'fk_mainmenu='.((float)DOL_VERSION >= 7.0 ? 'billing' : 'accountancy').',fk_leftmenu=customers_bills',			                // Put 0 if this is a top menu
 									'type'=>'left',			                // This is a Top menu entry
 									'titre'=>$langs->trans('lcrMenuTitle'),
-									'mainmenu'=>'customers_bills',
-									'leftmenu'=>'lcr',
+									'mainmenu'=>(float)DOL_VERSION >= 7.0 ? 'billing' : 'accountancy',
+									'leftmenu'=>'customers_bills',
 									'url'=>'/lcr/lcr.php',
 									'langs'=>'mylangfile@lcr',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
 									'position'=>100,
