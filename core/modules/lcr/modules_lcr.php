@@ -59,6 +59,8 @@ abstract class ModeleLcr extends CommonDocGenerator
 	}
 }
 
+if((float)DOL_VERSION >= 8.0) {abstract class ModelePDFLcr extends ModeleLcr {}}
+
 /**
  *	Classe mere des modeles de numerotation des references de facture
  */
