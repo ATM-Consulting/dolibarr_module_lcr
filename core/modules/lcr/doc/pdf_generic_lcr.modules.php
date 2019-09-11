@@ -136,6 +136,9 @@ class pdf_generic_lcr extends ModelePDFFactures {
 					include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
 					$hookmanager=new HookManager($this->db);
 				}
+				
+				// Ne pas passer dans le hook des factures (pour concatpdf)
+				$object->element = 'lcr_facture';
 				$hookmanager->initHooks(array('pdfgeneration'));
 				$parameters=array('file'=>$file,'object'=>$object,'outputlangs'=>$outputlangs);
 				global $action;
