@@ -58,7 +58,7 @@ class modlcr extends DolibarrModules
 		// Module label (no space allowed), used if translation string 'ModuleXXXName' not found (where XXX is value of numeric property 'numero' of module)
 		$this->name = preg_replace('/^mod/i','',get_class($this));
 		// Module description, used if translation string 'ModuleXXXDesc' not found (where XXX is value of numeric property 'numero' of module)
-		$this->description = "Description of module lcr";
+		$this->description = "Module de gestion des traites (LCR). Il permet la génération de pdf avec une ou plusieurs LCR par page. Il permet aussi la génération d'un fichier CSV";
 		// Possible values for version are: 'development', 'experimental', 'dolibarr' or version
 		$this->version = '3.0';
 		// Key used in llx_const table to save module status enabled/disabled (where MYMODULE is value of property name of module in uppercase)
