@@ -181,9 +181,31 @@ class pdf_generic_lcr extends ModelePDFFactures {
         $posx=$this->page_largeur-$this->marge_droite-100;
 
 		$pdf->SetXY($this->marge_gauche,$posy);
-
-		$text=$this->emetteur->name;
-		$pdf->MultiCell(100, 4, $outputlangs->convToOutputCharset($text), 0, 'L');
+		// Logo
+		if (empty($conf->global->PDF_DISABLE_MYCOMPANY_LOGO))
+		{
+		    $logo=$conf->mycompany->dir_output.'/logos/'.$this->emetteur->logo;
+		    if ($this->emetteur->logo)
+		    {
+		        if (is_readable($logo))
+		        {
+		            $height=pdf_getHeightForLogo($logo);
+		            $pdf->Image($logo, $this->marge_gauche, $posy, 0, $height);	// width=0 (auto)
+		        }
+		        else
+		        {
+		            $pdf->SetTextColor(200,0,0);
+		            $pdf->SetFont('','B',$default_font_size - 2);
+		            $pdf->MultiCell($w, 3, $outputlangs->transnoentities("ErrorLogoFileNotFound",$logo), 0, 'L');
+		            $pdf->MultiCell($w, 3, $outputlangs->transnoentities("ErrorGoToGlobalSetup"), 0, 'L');
+		        }
+		    }
+		    else
+		    {
+		        $text=$this->emetteur->name;
+		        $pdf->MultiCell($w, 4, $outputlangs->convToOutputCharset($text), 0, 'L');
+		    }
+		}
 		
 		$pdf->SetFont('','B', $default_font_size + 3);
 		$pdf->SetXY($posx,$posy);
@@ -266,82 +288,94 @@ class pdf_generic_lcr extends ModelePDFFactures {
 		}
 
 		$posy+=1;
-
+		
 		if ($showaddress)
 		{
-
-			// Show sender
-			$posy=40;
-			$posx=$this->marge_gauche;
-			if (! empty($conf->global->MAIN_INVERT_SENDER_RECIPIENT)) $posx=$this->page_largeur-$this->marge_droite-80;
-			$hautcadre=38;
-
-			// Show sender frame
-			$pdf->SetTextColor(0,0,0);
-			$pdf->SetFont('','', $default_font_size - 2);
-			$pdf->SetXY($posx,$posy-5);
-			$pdf->MultiCell(66,5, $outputlangs->transnoentities("BillFrom").":", 0, 'L');
-			$pdf->SetXY($posx,$posy);
-			$pdf->SetFillColor(230,230,230);
-			$pdf->MultiCell(92, $hautcadre, "", 0, 'R', 1);
-			$pdf->SetTextColor(0,0,60);
-
-			// Show sender name
-			$pdf->SetXY($posx+2,$posy+3);
-			$pdf->SetFont('','B', $default_font_size);
-			$pdf->MultiCell(90, 4, $outputlangs->convToOutputCharset($this->emetteur->name), 0, 'L');
-			$posy=$pdf->getY();
-
-			// Show sender information
-			$pdf->SetXY($posx+2,$posy);
-			$pdf->SetFont('','', $default_font_size - 1);
-			$pdf->MultiCell(90, 4, $carac_emetteur, 0, 'L');
-
-
-
-			// If BILLING contact defined on invoice, we use it
-			$usecontact=false;
-
-			// Recipient name
-			if (! empty($usecontact))
-			{
-				// On peut utiliser le nom de la societe du contact
-				if (! empty($conf->global->MAIN_USE_COMPANY_NAME_OF_CONTACT)) $socname = $object->contact->socname;
-				else $socname = $object->client->nom;
-				$carac_client_name=$outputlangs->convToOutputCharset($socname);
-			}
-			else
-			{
-				$carac_client_name=$outputlangs->convToOutputCharset($object->client->nom);
-			}
-
-			$carac_client=pdf_build_address($outputlangs,$this->emetteur,(!empty($object->thirdparty) ? $object->thirdparty : $object->client),($usecontact?$object->contact:''),$usecontact,'target');
-
-			// Show recipient
-			$widthrecbox=92;
-			if ($this->page_largeur < 210) $widthrecbox=84;	// To work with US executive format
-			$posy=40;
-			$posx=$this->page_largeur-$this->marge_droite-$widthrecbox;
-			if (! empty($conf->global->MAIN_INVERT_SENDER_RECIPIENT)) $posx=$this->marge_gauche;
-
-			// Show recipient frame
-			$pdf->SetTextColor(0,0,0);
-			$pdf->SetFont('','', $default_font_size - 2);
-			$pdf->SetXY($posx+2,$posy-5);
-			$pdf->MultiCell($widthrecbox, 5, $outputlangs->transnoentities("BillTo").":",0,'L');
-			$pdf->Rect($posx, $posy, $widthrecbox, $hautcadre);
-
-			// Show recipient name
-			$pdf->SetXY($posx+2,$posy+3);
-			$pdf->SetFont('','B', $default_font_size);
-			$pdf->MultiCell($widthrecbox, 4, $carac_client_name, 0, 'L');
-
-			// Show recipient information
-			$pdf->SetFont('','', $default_font_size - 1);
-			$pdf->SetXY($posx+2,$posy+4+(dol_nboflines_bis($carac_client_name,50)*4));
-			$pdf->MultiCell($widthrecbox, 4, $carac_client, 0, 'L');
+		    // Sender properties
+		    $carac_emetteur = pdf_build_address($outputlangs, $this->emetteur, $object->thirdparty, '', 0, 'source', $object);
+		    
+		    // Show sender
+		    $posy=!empty($conf->global->MAIN_PDF_USE_ISO_LOCATION) ? 40 : 42;
+		    $posy+=$top_shift;
+		    $posx=$this->marge_gauche;
+		    if (! empty($conf->global->MAIN_INVERT_SENDER_RECIPIENT)) $posx=$this->page_largeur-$this->marge_droite-80;
+		    
+		    $hautcadre=!empty($conf->global->MAIN_PDF_USE_ISO_LOCATION) ? 38 : 40;
+		    $widthrecbox=!empty($conf->global->MAIN_PDF_USE_ISO_LOCATION) ? 92 : 82;
+		    
+		    
+		    // Show sender frame
+		    $pdf->SetTextColor(0,0,0);
+		    $pdf->SetFont('','', $default_font_size - 2);
+		    $pdf->SetXY($posx,$posy-5);
+		    $pdf->MultiCell(66,5, $outputlangs->transnoentities("BillFrom").":", 0, 'L');
+		    $pdf->SetXY($posx,$posy);
+		    $pdf->SetFillColor(230,230,230);
+		    $pdf->MultiCell($widthrecbox, $hautcadre, "", 0, 'R', 1);
+		    $pdf->SetTextColor(0,0,60);
+		    
+		    // Show sender name
+		    $pdf->SetXY($posx+2,$posy+3);
+		    $pdf->SetFont('','B', $default_font_size);
+		    $pdf->MultiCell($widthrecbox-2, 4, $outputlangs->convToOutputCharset($this->emetteur->name), 0, 'L');
+		    $posy=$pdf->getY();
+		    
+		    // Show sender information
+		    $pdf->SetXY($posx+2,$posy);
+		    $pdf->SetFont('','', $default_font_size - 1);
+		    $pdf->MultiCell($widthrecbox-2, 4, $carac_emetteur, 0, 'L');
+		    
+		    
+		    
+		    // If BILLING contact defined on invoice, we use it
+		    $usecontact=false;
+		    $arrayidcontact=$object->getIdContact('external','BILLING');
+		    if (count($arrayidcontact) > 0)
+		    {
+		        $usecontact=true;
+		        $result=$object->fetch_contact($arrayidcontact[0]);
+		    }
+		    
+		    //Recipient name
+		    // On peut utiliser le nom de la societe du contact
+		    if ($usecontact && !empty($conf->global->MAIN_USE_COMPANY_NAME_OF_CONTACT)) {
+		        $thirdparty = $object->contact;
+		    } else {
+		        $thirdparty = $object->thirdparty;
+		    }
+		    
+		    $carac_client_name= pdfBuildThirdpartyName($thirdparty, $outputlangs);
+		    
+		    $carac_client=pdf_build_address($outputlangs,$this->emetteur,$object->thirdparty,($usecontact?$object->contact:''),$usecontact,'target',$object);
+		    
+		    // Show recipient
+		    $widthrecbox=!empty($conf->global->MAIN_PDF_USE_ISO_LOCATION) ? 92 : 100;
+		    if ($this->page_largeur < 210) $widthrecbox=84;	// To work with US executive format
+		    $posy=!empty($conf->global->MAIN_PDF_USE_ISO_LOCATION) ? 40 : 42;
+		    $posy+=$top_shift;
+		    $posx=$this->page_largeur-$this->marge_droite-$widthrecbox;
+		    if (! empty($conf->global->MAIN_INVERT_SENDER_RECIPIENT)) $posx=$this->marge_gauche;
+		    
+		    // Show recipient frame
+		    $pdf->SetTextColor(0,0,0);
+		    $pdf->SetFont('','', $default_font_size - 2);
+		    $pdf->SetXY($posx+2,$posy-5);
+		    $pdf->MultiCell($widthrecbox, 5, $outputlangs->transnoentities("BillTo").":",0,'L');
+		    $pdf->Rect($posx, $posy, $widthrecbox, $hautcadre);
+		    
+		    // Show recipient name
+		    $pdf->SetXY($posx+2,$posy+3);
+		    $pdf->SetFont('','B', $default_font_size);
+		    $pdf->MultiCell($widthrecbox, 2, $carac_client_name, 0, 'L');
+		    
+		    $posy = $pdf->getY();
+		    
+		    // Show recipient information
+		    $pdf->SetFont('','', $default_font_size - 1);
+		    $pdf->SetXY($posx+2,$posy);
+		    $pdf->MultiCell($widthrecbox, 4, $carac_client, 0, 'L');
 		}
-
+		
 		$pdf->SetTextColor(0,0,0);
 	}
 
@@ -390,7 +424,7 @@ class pdf_generic_lcr extends ModelePDFFactures {
 				$this->_pagehead($pdf, $object, 1, $outputlangs);
 				$curx=$this->marge_gauche;
 				
-				$heightforinfotot = 50;	// Height reserved to output the info and total part
+				$heightforinfotot = 78;	// Height reserved to output the info and total part
 		        $heightforfreetext= (isset($conf->global->MAIN_PDF_FREETEXT_HEIGHT)?$conf->global->MAIN_PDF_FREETEXT_HEIGHT:5);	// Height reserved to output the free text on last page
 	            $heightforfooter = $this->marge_basse + 8;	// Height reserved to output the footer (value include bottom margin)
 	            
