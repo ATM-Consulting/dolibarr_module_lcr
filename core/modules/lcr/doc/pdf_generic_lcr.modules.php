@@ -5,7 +5,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/pdf.lib.php';
 
 class pdf_generic_lcr extends ModelePDFFactures {
-	
+
     var $db;
     var $name;
     var $description;
@@ -109,7 +109,7 @@ class pdf_generic_lcr extends ModelePDFFactures {
 		{
 			$dir = $conf->lcr->dir_output . "/";
 			$file = $dir . "" . 'lcr_'.date('YmdHis') . ".pdf";
-			
+
 			if (! file_exists($dir))
 			{
 				if (dol_mkdir($dir) < 0)
@@ -184,7 +184,7 @@ class pdf_generic_lcr extends ModelePDFFactures {
 
 		$text=$this->emetteur->name;
 		$pdf->MultiCell(100, 4, $outputlangs->convToOutputCharset($text), 0, 'L');
-		
+
 		$pdf->SetFont('','B', $default_font_size + 3);
 		$pdf->SetXY($posx,$posy);
 		$pdf->SetTextColor(0,0,60);
@@ -348,23 +348,23 @@ class pdf_generic_lcr extends ModelePDFFactures {
 	function _showLCR($pdf, $object, $outputlangs, &$TtoGenerate)
 	{
 		global $db, $conf;
-		
+
 		//Gestion LCR /////////////////////////////////////////////////////////////////////
-	   	
+
 		$pdf->AddPage();
 		$posy =50;
 		$pdf->SetDrawColor(0,0,0);
-	
+
 		$default_font_size = pdf_getPDFFontSize($outputlangs);
 		$nb_facture = count($TtoGenerate);
-		
+
 		foreach($TtoGenerate as $ii => $ref_piece) {
-			
+
 			$f = new Facture($db);
 			$f->fetch('', $ref_piece);
 			$f->fetch_thirdparty();
 			$object = &$f;
-			
+
 			// Compatibilité Dolibarr >= 4.0
 			if(empty($object->client) && ! empty($object->thirdparty))
 			{
@@ -376,27 +376,27 @@ class pdf_generic_lcr extends ModelePDFFactures {
 				$deja_regle = $object->getSommePaiement();
 				$creditnoteamount=$object->getSumCreditNotesUsed();
 				$depositsamount=$object->getSumDepositsUsed();
-				$resteapayer = price2num($object->total_ttc - $deja_regle - $creditnoteamount - $depositsamount, 'MT');	
+				$resteapayer = price2num($object->total_ttc - $deja_regle - $creditnoteamount - $depositsamount, 'MT');
 			}
 			else
 			{
 				$resteapayer = price2num($object->total_ttc);
 			}
-			
-			
+
+
 			// ENTETE
 			if (!empty($conf->global->LCR_GENERATE_ONE_PER_PAGE_WiTH_ADDRESS))
 			{
 				$this->_pagehead($pdf, $object, 1, $outputlangs);
 				$curx=$this->marge_gauche;
-				
+
 				$heightforinfotot = 50;	// Height reserved to output the info and total part
 		        $heightforfreetext= (isset($conf->global->MAIN_PDF_FREETEXT_HEIGHT)?$conf->global->MAIN_PDF_FREETEXT_HEIGHT:5);	// Height reserved to output the free text on last page
 	            $heightforfooter = $this->marge_basse + 8;	// Height reserved to output the footer (value include bottom margin)
-	            
+
 				$bottomlasttab=$this->page_hauteur - $heightforinfotot - $heightforfreetext - $heightforfooter + 10;
 				$cury=$bottomlasttab;
-				
+
 				$pdf->SetLineStyle(array('dash'=>'1,1','color'=>array(200,200,200)));
 				$pdf->Line($curx, $cury-11, $this->page_largeur-$this->marge_droite, $cury-11);
 				$pdf->SetLineStyle(array('dash'=>0, 'color'=>array(0,0,0)));
@@ -404,37 +404,37 @@ class pdf_generic_lcr extends ModelePDFFactures {
 			else
 			{
 				$curx=$this->marge_gauche;
-				$cury=$posy-30;	
+				$cury=$posy-30;
 			}
-			
-					   
+
+
 			$pdf->SetFont('','', $default_font_size - 1);
 			$pdf->writeHTMLCell(53, 20, 10, $cury-8, $outputlangs->convToOutputCharset('MERCI DE NOUS RETOURNER LA PRESENTE TRAITE SOUS 8 JOURS.'), 0, 1, false, true, 'J',true);
-			
+
 			$pdf->SetFont('','', $default_font_size - 3);
 			$pdf->writeHTMLCell(45, 20, 68, $cury-8, $outputlangs->convToOutputCharset('Contre cette LETTRE DE CHANGE STIPULEE SANS FRAIS').'<br>'.$outputlangs->convToOutputCharset('Veuillez payer la somme indiquée ci-dessous à l\'ordre de'), 0, 1, false, true, 'J',true);
-			
+
 			$pdf->SetFont('','', $default_font_size - 2);
 			$adresse = $outputlangs->convToOutputCharset($conf->global->MAIN_INFO_SOCIETE_NOM) . '<br>' . nl2br($conf->global->MAIN_INFO_SOCIETE_ADDRESS) . '<br>' . $outputlangs->convToOutputCharset($conf->global->MAIN_INFO_SOCIETE_ZIP.' '.$conf->global->MAIN_INFO_SOCIETE_TOWN);
 			$pdf->writeHTMLCell(50, 20, 120, $cury-8, $adresse, 0, 1, false, true, 'J',true);
 
-			//Affichage code monnaie 
+			//Affichage code monnaie
 			$pdf->SetXY(180, $cury+1);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'',7);
-			$pdf->Cell(18, 0, "Code Monnaie",0,1,C);
+			$pdf->Cell(18, 0, "Code Monnaie",0,1,'C');
 			$pdf->SetXY(180, $cury+5);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'B',14);
-			$pdf->Cell(18, 0, $outputlangs->trans($conf->currency),0,0,C);
+			$pdf->Cell(18, 0, $outputlangs->trans($conf->currency),0,0,'C');
 
 			//Affichage lieu / date
 			//$town = !empty($this->emetteur->town) ? $this->emetteur->town : $this->emetteur->ville;
 			$town = $conf->global->MAIN_INFO_SOCIETE_TOWN;
-			
+
 			$cury+=5;
 			$pdf->SetXY(30, $cury);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'B',8);
 			$pdf->Cell(15, 0, "A ".$outputlangs->convToOutputCharset($town).", le",0,1,'R');
-			
+
 			// jolie fleche ...
 			$curx=43;
 			$cury+=2;
@@ -453,47 +453,47 @@ class pdf_generic_lcr extends ModelePDFFactures {
 			$largeur_cadre=27;
 			$pdf->SetXY($curx, $cury);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'',7);
-			$pdf->Cell($largeur_cadre, 0, "Montant pour contrôle",0,0,C);
+			$pdf->Cell($largeur_cadre, 0, "Montant pour contrôle",0,0,'C');
 			$pdf->Line($curx, $cury, $curx, $cury+$hauteur_cadre);
 			$pdf->Line($curx, $cury+$hauteur_cadre, $curx+$largeur_cadre, $cury+$hauteur_cadre);
 			$pdf->Line($curx+$largeur_cadre, $cury, $curx+$largeur_cadre, $cury+$hauteur_cadre);
 			$pdf->SetXY($curx, $cury+4);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'B',8);
-			$pdf->Cell($largeur_cadre, 0, price($resteapayer),0,0,C);
-					
-			$curx=$curx+$largeur_cadre+5;
-			$hauteur_cadre=8;
-			$largeur_cadre=25;
-			$pdf->SetXY($curx, $cury);
-			$pdf->SetFont(pdf_getPDFFont($outputlangs),'',7);
-			$pdf->Cell($largeur_cadre, 0, "Date de création",0,0,C);
-			$pdf->Line($curx, $cury, $curx, $cury+$hauteur_cadre);
-			$pdf->Line($curx, $cury+$hauteur_cadre, $curx+$largeur_cadre, $cury+$hauteur_cadre);
-			$pdf->Line($curx+$largeur_cadre, $cury, $curx+$largeur_cadre, $cury+$hauteur_cadre);
-			$pdf->SetXY($curx, $cury+4);
-			$pdf->SetFont(pdf_getPDFFont($outputlangs),'B',8);
-			$pdf->Cell($largeur_cadre, 0, dol_print_date($object->date,"day",false,$outpulangs),0,0,C);
+			$pdf->Cell($largeur_cadre, 0, price($resteapayer),0,0,'C');
 
 			$curx=$curx+$largeur_cadre+5;
 			$hauteur_cadre=8;
 			$largeur_cadre=25;
 			$pdf->SetXY($curx, $cury);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'',7);
-			$pdf->Cell($largeur_cadre, 0, "Echéance",0,0,C);
+			$pdf->Cell($largeur_cadre, 0, "Date de création",0,0,'C');
 			$pdf->Line($curx, $cury, $curx, $cury+$hauteur_cadre);
 			$pdf->Line($curx, $cury+$hauteur_cadre, $curx+$largeur_cadre, $cury+$hauteur_cadre);
 			$pdf->Line($curx+$largeur_cadre, $cury, $curx+$largeur_cadre, $cury+$hauteur_cadre);
 			$pdf->SetXY($curx, $cury+4);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'B',8);
-			$pdf->Cell($largeur_cadre, 0, dol_print_date($object->date_lim_reglement,"day"),0,0,C);
+			$pdf->Cell($largeur_cadre, 0, dol_print_date($object->date,"day",false,$outputlangs),0,0,'C');
+
+			$curx=$curx+$largeur_cadre+5;
+			$hauteur_cadre=8;
+			$largeur_cadre=25;
+			$pdf->SetXY($curx, $cury);
+			$pdf->SetFont(pdf_getPDFFont($outputlangs),'',7);
+			$pdf->Cell($largeur_cadre, 0, "Echéance",0,0,'C');
+			$pdf->Line($curx, $cury, $curx, $cury+$hauteur_cadre);
+			$pdf->Line($curx, $cury+$hauteur_cadre, $curx+$largeur_cadre, $cury+$hauteur_cadre);
+			$pdf->Line($curx+$largeur_cadre, $cury, $curx+$largeur_cadre, $cury+$hauteur_cadre);
+			$pdf->SetXY($curx, $cury+4);
+			$pdf->SetFont(pdf_getPDFFont($outputlangs),'B',8);
+			$pdf->Cell($largeur_cadre, 0, dol_print_date($object->date_lim_reglement,"day"),0,0,'C');
 
 			$curx=$curx+$largeur_cadre+5;
 			$hauteur_cadre=8;
 			$largeur_cadre=75;
 			$pdf->SetXY($curx, $cury-1);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'',7);
-			$pdf->Cell($largeur_cadre, 0, "LCR Seulement",0,0,C);
-			
+			$pdf->Cell($largeur_cadre, 0, "LCR Seulement",0,0,'C');
+
 			$largeurportioncadre=30;
 			$pdf->Line($curx, $cury, $curx, $cury+$hauteur_cadre);
 			$pdf->Line($curx, $cury+$hauteur_cadre, $curx+$largeurportioncadre, $cury+$hauteur_cadre);
@@ -526,13 +526,13 @@ class pdf_generic_lcr extends ModelePDFFactures {
 			$largeur_cadre=30;
 			$pdf->SetXY($curx, $cury);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'',7);
-			$pdf->Cell($largeur_cadre, 0, "Montant",0,0,C);
+			$pdf->Cell($largeur_cadre, 0, "Montant",0,0,'C');
 			$pdf->Line($curx, $cury, $curx, $cury+$hauteur_cadre);
 			$pdf->Line($curx, $cury+$hauteur_cadre, $curx+$largeur_cadre, $cury+$hauteur_cadre);
 			$pdf->Line($curx+$largeur_cadre, $cury, $curx+$largeur_cadre, $cury+$hauteur_cadre);
 			$pdf->SetXY($curx, $cury+4);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'B',8);
-			$pdf->Cell($largeur_cadre, 0, price($resteapayer),0,0,C);
+			$pdf->Cell($largeur_cadre, 0, price($resteapayer),0,0,'C');
 
 			$cury=$cury+$hauteur_cadre+3;
 			$curx=20;
@@ -541,20 +541,20 @@ class pdf_generic_lcr extends ModelePDFFactures {
 			$pdf->Line($curx, $cury, $curx, $cury+$hauteur_cadre);
 			$pdf->Line($curx, $cury, $curx+$largeur_cadre/5, $cury);
 			$pdf->Line($curx, $cury+$hauteur_cadre, $curx+$largeur_cadre/5, $cury+$hauteur_cadre);
-			
+
 			$pdf->Line($curx+$largeur_cadre, $cury, $curx+$largeur_cadre, $cury+$hauteur_cadre);
 			$pdf->Line($curx+$largeur_cadre, $cury, $curx+$largeur_cadre*4/5, $cury);
 			$pdf->Line($curx+$largeur_cadre, $cury+$hauteur_cadre, $curx+$largeur_cadre*4/5, $cury+$hauteur_cadre);
 			$pdf->SetXY($curx, $cury+1.5);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'B',8);
-			$pdf->Cell($largeur_cadre, 1, $outputlangs->convToOutputCharset($object->ref),0,0,C);
+			$pdf->Cell($largeur_cadre, 1, $outputlangs->convToOutputCharset($object->ref),0,0,'C');
 
 			$curx=$curx+$largeur_cadre+15;
 			$largeur_cadre=50;
 			$pdf->Line($curx, $cury, $curx, $cury+$hauteur_cadre);
 			$pdf->Line($curx, $cury, $curx+$largeur_cadre/5, $cury);
 			$pdf->Line($curx, $cury+$hauteur_cadre, $curx+$largeur_cadre/5, $cury+$hauteur_cadre);
-			
+
 			$pdf->Line($curx+$largeur_cadre, $cury, $curx+$largeur_cadre, $cury+$hauteur_cadre);
 			$pdf->Line($curx+$largeur_cadre, $cury, $curx+$largeur_cadre*4/5, $cury);
 			$pdf->Line($curx+$largeur_cadre, $cury+$hauteur_cadre, $curx+$largeur_cadre*4/5, $cury+$hauteur_cadre);
@@ -568,7 +568,7 @@ class pdf_generic_lcr extends ModelePDFFactures {
 			$pdf->Line($curx, $cury, $curx, $cury+$hauteur_cadre);
 			$pdf->Line($curx, $cury, $curx+$largeur_cadre/5, $cury);
 			$pdf->Line($curx, $cury+$hauteur_cadre, $curx+$largeur_cadre/5, $cury+$hauteur_cadre);
-			
+
 			$pdf->Line($curx+$largeur_cadre, $cury, $curx+$largeur_cadre, $cury+$hauteur_cadre);
 			$pdf->Line($curx+$largeur_cadre, $cury, $curx+$largeur_cadre*4/5, $cury);
 			$pdf->Line($curx+$largeur_cadre, $cury+$hauteur_cadre, $curx+$largeur_cadre*4/5, $cury+$hauteur_cadre);
@@ -576,7 +576,7 @@ class pdf_generic_lcr extends ModelePDFFactures {
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'B',8);
 // MB leave blank
 			//$pdf->Cell($largeur_cadre, 0, "R�f ",0,0,C);
- 
+
 				// RIB client
 			$cury=$cury+$hauteur_cadre+3;
 			$largeur_cadre=70;
@@ -585,7 +585,7 @@ class pdf_generic_lcr extends ModelePDFFactures {
 			$sql.= " FROM ".MAIN_DB_PREFIX ."societe_rib as rib";
 			$sql.= " WHERE rib.fk_soc = ".$object->client->id;
 			$sql.= ' ORDER BY default_rib DESC LIMIT 1'; // On veux en priorité le RIB par défaut si jamais on tombe sur le cas de +sieurs RIB mais pas de default alors on en prend qu'un
-			
+
 			$resql=$this->db->query($sql);
 			if ($resql)
 			{
@@ -605,29 +605,29 @@ class pdf_generic_lcr extends ModelePDFFactures {
 					$pdf->SetXY($curx+5, $cury+$hauteur_cadre-4);
 					$pdf->SetFont(pdf_getPDFFont($outputlangs),'B',8);
 					if ($cpt->code_banque && $cpt->code_guichet && $cpt->number && $cpt->cle_rib)
-						$pdf->Cell($largeur_cadre, 1, $cpt->code_banque."             ".$cpt->code_guichet."         ".$cpt->number."        ".$cpt->cle_rib,0,0,L);
+						$pdf->Cell($largeur_cadre, 1, $cpt->code_banque."             ".$cpt->code_guichet."         ".$cpt->number."        ".$cpt->cle_rib,0,0,'L');
 					$pdf->SetXY($curx, $cury+$hauteur_cadre-1);
 					$pdf->SetFont(pdf_getPDFFont($outputlangs),'',6);
-					$pdf->Cell($largeur_cadre, 1, "Code établissement    Code guichet           N° de compte            Cl RIB",0,0,L);
+					$pdf->Cell($largeur_cadre, 1, "Code établissement    Code guichet           N° de compte            Cl RIB",0,0,'L');
 					$curx=136;
 					$largeur_cadre=68;
 					$pdf->SetXY($curx, $cury-1);
 					$pdf->SetFont(pdf_getPDFFont($outputlangs),'',6);
-					$pdf->Cell($largeur_cadre, 1, "Domiciliation bancaire",0,0,C);
+					$pdf->Cell($largeur_cadre, 1, "Domiciliation bancaire",0,0,'C');
 					$pdf->SetXY($curx, $cury+2);
 					$pdf->SetFont(pdf_getPDFFont($outputlangs),'B',8);
 					if ($cpt->domiciliation)
-						$pdf->Cell($largeur_cadre, 5,$outputlangs->convToOutputCharset($cpt->domiciliation) ,1,0,C);
+						$pdf->Cell($largeur_cadre, 5,$outputlangs->convToOutputCharset($cpt->domiciliation) ,1,0,'C');
 					$i++;
 				}
 			}
-//				
+//
 			$cury=$cury+$hauteur_cadre+3;
 			$curx=$this->marge_gauche;
 			$largeur_cadre=20;
 			$pdf->SetXY($curx, $cury);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'',6);
-			$pdf->Cell($largeur_cadre, 1, "Acceptation ou aval",0,0,L);
+			$pdf->Cell($largeur_cadre, 1, "Acceptation ou aval",0,0,'L');
 			// jolie fl�che ...
 			$cury += 2;
 			$pdf->Line($curx+$largeur_cadre, $cury, $curx+$largeur_cadre+5, $cury);
@@ -644,41 +644,41 @@ class pdf_generic_lcr extends ModelePDFFactures {
 			// Signature du tireur
 			$pdf->SetXY($curx+$largeur_cadre*5, $cury);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'',6);
-			$pdf->MultiCell($largeur_cadre*2, 4, "Signature du tireur",0,C);
-			
+			$pdf->MultiCell($largeur_cadre*2, 4, "Signature du tireur",0,'C');
+
 			$pdf->Line(0,$cury+40,$this->page_largeur, $cury+40);
 			$pdf->SetXY($curx+100, $cury+36);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'',6);
-			$pdf->MultiCell(50, 4, "Ne rien inscrire au dessous de cette ligne",0,R);
+			$pdf->MultiCell(50, 4, "Ne rien inscrire au dessous de cette ligne",0,'R');
 
 			// Coordonnées du tiré
 			$pdf->SetXY($curx, $cury);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'',6);
-			$pdf->MultiCell($largeur_cadre, $hauteur_cadre, "Nom\n et Adresse\n du tiré",0,R);
+			$pdf->MultiCell($largeur_cadre, $hauteur_cadre, "Nom\n et Adresse\n du tiré",0,'R');
 			$pdf->SetXY($curx+$largeur_cadre+2, $cury-0.5);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'B',8);
 			$arrayidcontact = $object->getIdContact('external','BILLING');
 			$carac_client=$outputlangs->convToOutputCharset($object->client->nom);
 			$carac_client.="\n".$outputlangs->convToOutputCharset(!empty($object->client->address) ? $object->client->address : $object->client->adresse);
 			$carac_client.="\n".$outputlangs->convToOutputCharset(!empty($object->client->zip) ? $object->client->zip : $object->client->cp) . " " . $outputlangs->convToOutputCharset(!empty($object->client->town) ? $object->client->town : $object->client->ville)."\n";
-			$pdf->MultiCell($largeur_cadre*2.5, $hauteur_cadre, $carac_client,1,C);
+			$pdf->MultiCell($largeur_cadre*2.5, $hauteur_cadre, $carac_client,1,'C');
 
 			// N° Siren
 			$cury = $pdf->GetY() + 4; // Le précédent MultiCell change le Y courant. On rajoute 4 pour le démarrer systématiquement le cadre SIREN en dessous
 			$pdf->SetXY($curx, $cury);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'',6);
-			$pdf->MultiCell($largeur_cadre, 4, "N° SIREN du tiré",0,R);
+			$pdf->MultiCell($largeur_cadre, 4, "N° SIREN du tiré",0,'R');
 			$pdf->SetXY($curx+$largeur_cadre+2, $cury-0.5);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'B',8);
-			$pdf->MultiCell($largeur_cadre*2.5, 4, $outputlangs->convToOutputCharset(empty($object->client->siren) ? $object->client->idprof1 : $object->client->siren),1,C);
-		
-			
-			
+			$pdf->MultiCell($largeur_cadre*2.5, 4, $outputlangs->convToOutputCharset(empty($object->client->siren) ? $object->client->idprof1 : $object->client->siren),1,'C');
+
+
+
 			if (!empty($conf->global->LCR_GENERATE_ONE_PER_PAGE_WiTH_ADDRESS))
 			{
 				// New page
 				if ($ii < $nb_facture-1) $pdf->AddPage();
-				
+
 			}
 			else
 			{
@@ -690,11 +690,11 @@ class pdf_generic_lcr extends ModelePDFFactures {
 					$posy=50;
 				}
 			}
-			
-			
+
+
 		}
 
 //fin mb ///////////
 	}
-	
+
 }

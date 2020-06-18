@@ -44,6 +44,12 @@ $option = GETPOST('option');
 $mode=GETPOST('mode');
 $builddoc_generatebutton=GETPOST('builddoc_generatebutton');
 
+if (floatval(DOL_VERSION) > 9) {
+	$facref = "ref";
+} else {
+	$facref .= "facnumber";
+}
+
 // Security check
 if ($user->societe_id) $socid=$user->societe_id;
 $result = restrictedArea($user,'facture',$id,'');
@@ -277,12 +283,12 @@ if ($action == "builddoc" && $user->rights->facture->lire && ! GETPOST('button_s
         if (! empty($conf->global->MAIN_DISABLE_PDF_COMPRESSION)) $pdf->SetCompression(false);
 
 		dol_include_once('/lcr/core/modules/lcr/modules_lcr.php');
-		
+
 		//$doc = new generic_pdf_lcr($db);
 		$TtoGenerate = $_REQUEST['toGenerate'];
 		$object = new Facture($db);
 		$result = lcr_pdf_create($db, $object, 'generic_lcr', $outputlangs, $hidedetails, $hidedesc, $hideref, $TtoGenerate);
-		
+
 		// Add all others
 		/*foreach($files as $file)
 		{
@@ -314,9 +320,9 @@ if ($action == "builddoc" && $user->rights->facture->lire && ! GETPOST('button_s
 	}
 
 } elseif(is_array($_POST['toGenerate']) && isset($_REQUEST['generateCSV'])) {
-		
+
 	generateCSV();
-	
+
 }
 
 // Remove file
@@ -387,18 +393,18 @@ $late = GETPOST("late");
 
 $sortfield = GETPOST("sortfield",'alpha');
 $sortorder = GETPOST("sortorder",'alpha');
-$page = GETPOST("page",'int');
-if ($page == -1) { $page = 0; }
-$offset = $conf->liste_limit * $page;
+$limit = GETPOST('limit', 'int') ?GETPOST('limit', 'int') : $conf->liste_limit;
+$page = GETPOSTISSET('pageplusone') ? (GETPOST('pageplusone') - 1) : GETPOST("page", 'int');
+if (empty($page) || $page == -1 || !empty($search_btn) || !empty($search_remove_btn) || (empty($toselect) && $massaction === '0')) { $page = 0; }     // If $page is not defined, or '' or -1
+$offset = $limit * $page;
 $pageprev = $page - 1;
 $pagenext = $page + 1;
 if (! $sortfield) $sortfield="f.date_lim_reglement";
 if (! $sortorder) $sortorder="ASC";
 
-$limit = $conf->liste_limit;
-
 $sql = "SELECT s.nom, s.rowid as socid, s.email";
-$sql.= ", f.rowid as facid, f.facnumber, f.ref_client, f.increment, f.total as total_ht, f.tva as total_tva, f.total_ttc, f.localtax1, f.localtax2, f.revenuestamp";
+$sql.= ", f.rowid as facid, f.".$facref." as facnumber";
+$sql.=" , f.ref_client, f.increment, f.total as total_ht, f.tva as total_tva, f.total_ttc, f.localtax1, f.localtax2, f.revenuestamp";
 $sql.= ", f.datef as df, f.date_lim_reglement as datelimite";
 $sql.= ", f.paye as paye, f.fk_statut, f.type";
 $sql.= ", sum(pf.amount) as am";
@@ -427,20 +433,26 @@ if (GETPOST('filtre'))
 		$sql .= " AND " . $filt[0] . " = " . $filt[1];
 	}
 }
-if ($search_ref)         $sql .= " AND f.facnumber LIKE '%".$db->escape($search_ref)."%'";
+if ($search_ref) {
+	$sql .= " AND ";
+	if (floatval(DOL_VERSION) > 9) {
+		$sql .= " f.ref ";
+	} else {
+		$sql .= " f.facnumber";
+	}
+	$sql .= " LIKE '%" . $db->escape($search_ref) . "%'";
+}
 if ($search_refcustomer) $sql .= " AND f.ref_client LIKE '%".$db->escape($search_refcustomer)."%'";
 if ($search_societe)     $sql .= " AND s.nom LIKE '%".$db->escape($search_societe)."%'";
 if ($search_montant_ht)  $sql .= " AND f.total = '".$db->escape($search_montant_ht)."'";
 if ($search_montant_ttc) $sql .= " AND f.total_ttc = '".$db->escape($search_montant_ttc)."'";
-if (GETPOST('sf_ref'))   $sql .= " AND f.facnumber LIKE '%".$db->escape(GETPOST('sf_ref'))."%'";
-$sql.= " GROUP BY s.nom, s.rowid, s.email, f.rowid, f.facnumber, f.increment, f.total, f.tva, f.total_ttc, f.localtax1, f.localtax2, f.revenuestamp, f.datef, f.date_lim_reglement, f.paye, f.fk_statut, f.type ";
+if (GETPOST('sf_ref'))  $sql .= "f.".$facref." LIKE '%".$db->escape(GETPOST('sf_ref'))."%'";
+$sql.= " GROUP BY s.nom, s.rowid, s.email, f.rowid, f.".$facref.", f.increment, f.total, f.tva, f.total_ttc, f.localtax1, f.localtax2, f.revenuestamp, f.datef, f.date_lim_reglement, f.paye, f.fk_statut, f.type ";
 if (! $user->rights->societe->client->voir && ! $socid) $sql .= ", sc.fk_soc, sc.fk_user ";
 $sql.= " ORDER BY ";
 $listfield=explode(',',$sortfield);
 foreach ($listfield as $key => $value) $sql.=$listfield[$key]." ".$sortorder.",";
-$sql.= " f.facnumber DESC";
-
-//$sql .= $db->plimit($limit+1,$offset);
+$sql.= " f.".$facref." DESC";
 
 $resql = $db->query($sql);
 if ($resql)
@@ -545,8 +557,8 @@ if ($resql)
 	$i = 0;
 	print '<table class="liste" width="100%">';
 	print '<tr class="liste_titre">';
-	print_liste_field_titre($langs->trans("Ref"),$_SERVER["PHP_SELF"],"f.facnumber","",$param,"",$sortfield,$sortorder);
-    	print_liste_field_titre($langs->trans('RefCustomer'),$_SERVER["PHP_SELF"],'f.ref_client','',$param,'',$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans("Ref"),$_SERVER["PHP_SELF"],"f.".$facref,"",$param,"",$sortfield,$sortorder);
+	print_liste_field_titre($langs->trans('RefCustomer'),$_SERVER["PHP_SELF"],'f.ref_client','',$param,'',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Date"),$_SERVER["PHP_SELF"],"f.datef","",$param,'align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("DateDue"),$_SERVER["PHP_SELF"],"f.date_lim_reglement","",$param,'align="center"',$sortfield,$sortorder);
 	print_liste_field_titre($langs->trans("Company"),$_SERVER["PHP_SELF"],"s.nom","",$param,"",$sortfield,$sortorder);
@@ -734,17 +746,17 @@ if ($resql)
 		// We disable multilang because we concat already existing pdf.
 		//echo $filedir;exit;
 		$formfile->show_documents('lcr','',$filedir,$urlsource,$genallowed,$delallowed,'',1,1,0,48,1,$param,$langs->trans("Fichier LCR générés"),$langs->trans("Fusion LCR"));
-		
+
 		?>
-		
+
 			<script type="text/javascript">
-				
+
 				$("#builddoc_generatebutton").parent().append(' <input class="button" type="SUBMIT" name="generateCSV" value="Générer CSV">');
-				
+
 			</script>
-		
+
 		<?php
-		
+
 	}
 	else
 	{
