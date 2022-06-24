@@ -625,7 +625,7 @@ if ($resql)
 			print '<td class="nowrap">';
 
 			$facturestatic->id=$objp->facid;
-			$facturestatic->ref=$objp->facnumber;
+			$facturestatic->ref=$objp->$ref_field;
 			$facturestatic->type=$objp->type;
 
 			print '<table class="nobordernopadding"><tr class="nocellnopadd">';
@@ -642,8 +642,8 @@ if ($resql)
 
 			// PDF Picto
 			print '<td width="16" align="right" class="nobordernopadding hideonsmartphone">';
-            $filename=dol_sanitizeFileName($objp->facnumber);
-			$filedir=$conf->facture->dir_output . '/' . dol_sanitizeFileName($objp->facnumber);
+            $filename=dol_sanitizeFileName($objp->$ref_field);
+			$filedir=$conf->facture->dir_output . '/' . dol_sanitizeFileName($objp->$ref_field);
 			print $formfile->getDocumentsLink($facturestatic->element, $filename, $filedir);
             print '</td>';
 
@@ -687,7 +687,7 @@ if ($resql)
 			{
 				// Checkbox to merge
 				print '<td align="center">';
-				print '<input id="cb'.$objp->facid.'" class="flat checkformerge" type="checkbox" name="toGenerate[]" value="'.$objp->facnumber.'">';
+				print '<input id="cb'.$objp->facid.'" class="flat checkformerge" type="checkbox" name="toGenerate[]" value="'.$objp->$ref_field.'">';
 				print '</td>' ;
 			}
 			else
