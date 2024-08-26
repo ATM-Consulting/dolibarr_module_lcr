@@ -49,7 +49,7 @@ if (isset($user->societe_id)) $socid=$user->societe_id;
 $result = restrictedArea($user,'facture',$id,'');
 
 $diroutputpdf=$conf->lcr->dir_output;
-if (! $user->hasRight('societe','client','read') || isset($socid)) $diroutputpdf.='/private/'.$user->id;	// If user has no permission to see all, output dir is specific to user
+if ($user->hasRight('societe','client','read') || isset($socid)) $diroutputpdf.='/private/'.$user->id;	// If user has no permission to see all, output dir is specific to user
 
 $resultmasssend='';
 
@@ -274,14 +274,14 @@ if ($action == "builddoc" && $user->hasRight('facture','lire')  && ! GETPOST('bu
         }
         $pdf->SetFont(pdf_getPDFFont($outputlangs));
 
-        if (! empty(getDolGlobalString('MAIN_DISABLE_PDF_COMPRESSION'))) $pdf->SetCompression(false);
+        if (getDolGlobalString('MAIN_DISABLE_PDF_COMPRESSION')) $pdf->SetCompression(false);
 
 		dol_include_once('/lcr/core/modules/lcr/modules_lcr.php');
 
 		//$doc = new generic_pdf_lcr($db);
 		$TtoGenerate = $_REQUEST['toGenerate'];
 		$object = new Facture($db);
-		$result = lcr_pdf_create($db, $object, 'generic_lcr', $outputlangs, $hidedetails, $hidedesc, $hideref, $TtoGenerate);
+		$result = lcr_pdf_create($db, $object, 'generic_lcr', $outputlangs, '', '', '', $TtoGenerate);
 
 		// Add all others
 		/*foreach($files as $file)
@@ -303,12 +303,13 @@ if ($action == "builddoc" && $user->hasRight('facture','lire')  && ! GETPOST('bu
 		// Save merged file
 		$filename=strtolower(dol_sanitizeFileName($langs->transnoentities("Unpaid")));
 		if ($option=='late') $filename.='_'.strtolower(dol_sanitizeFileName($langs->transnoentities("Late")));
+		$pagecount = 0;
 		if ($pagecount)
 		{
 			$now=dol_now();
 			$file=$diroutputpdf.'/'.$filename.'_'.dol_print_date($now,'dayhourlog').'.pdf';
 			$pdf->Output($file,'F');
-			if (! empty(getDolGlobalString('MAIN_UMASK')))
+			if (getDolGlobalString('MAIN_UMASK'))
 			@chmod($file, octdec(getDolGlobalString('MAIN_UMASK')));
 		}
 	}
@@ -405,15 +406,15 @@ $sql.= ", f.rowid as facid, f.".$ref_field.", f.ref_client, f.increment, f.".$to
 $sql.= ", f.datef as df, f.date_lim_reglement as datelimite";
 $sql.= ", f.paye as paye, f.fk_statut, f.type";
 $sql.= ", sum(pf.amount) as am";
-if ($user->hasRight('societe','client','voir')  && ! $socid) $sql .= ", sc.fk_soc, sc.fk_user ";
-$sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
-if (! $user->hasRight('societe','client','voir')  && ! $socid) $sql .= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
-$sql.= ",".MAIN_DB_PREFIX."facture as f";
-$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."paiement_facture as pf ON f.rowid=pf.fk_facture ";
+if ($user->hasRight('societe','client','read')  && ! $socid) $sql .= ", sc.fk_soc, sc.fk_user ";
+$sql.= " FROM ".$db->prefix()."societe as s";
+if (! $user->hasRight('societe','client','voir')  && ! $socid) $sql .= ", ".$db->prefix()."societe_commerciaux as sc";
+$sql.= ",".$db->prefix()."facture as f";
+$sql.= " LEFT JOIN ".$db->prefix()."paiement_facture as pf ON f.rowid=pf.fk_facture ";
 $sql.= " WHERE f.fk_soc = s.rowid";
 $sql.= " AND f.entity = ".$conf->entity;
 $sql.= " AND f.type IN (0,1,3) AND f.fk_statut = 1";
-if(!empty(getDolGlobalString('LCR_PAIEMENT_MODE')))
+if(getDolGlobalString('LCR_PAIEMENT_MODE'))
 	$sql.= " AND fk_mode_reglement = ".getDolGlobalString('LCR_PAIEMENT_MODE');
 else
 	$sql.= " AND fk_mode_reglement = 52";

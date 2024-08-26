@@ -175,7 +175,7 @@ function lcr_pdf_create($db, $object, $modele, $outputlangs, $hidedetails=0, $hi
 	// Positionne le modele sur le nom du modele a utiliser
 	if (! dol_strlen($modele))
 	{
-		if (! empty(getDolGlobalString('FACTURE_ADDON_PDF')))
+		if (getDolGlobalString('FACTURE_ADDON_PDF'))
 		{
 			$modele = getDolGlobalString('FACTURE_ADDON_PDF');
 		}
