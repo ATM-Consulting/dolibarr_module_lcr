@@ -49,7 +49,7 @@ if (isset($user->societe_id)) $socid=$user->societe_id;
 $result = restrictedArea($user,'facture',$id,'');
 
 $diroutputpdf=$conf->lcr->dir_output;
-if (! $user->rights->societe->client->voir || isset($socid)) $diroutputpdf.='/private/'.$user->id;	// If user has no permission to see all, output dir is specific to user
+if (! $user->hasRight('societe','client','read') || isset($socid)) $diroutputpdf.='/private/'.$user->id;	// If user has no permission to see all, output dir is specific to user
 
 $resultmasssend='';
 
@@ -232,7 +232,7 @@ if ($action == 'presend' && GETPOST('sendmail'))
 }
 
 
-if ($action == "builddoc" && $user->rights->facture->lire && ! GETPOST('button_search') && !empty($builddoc_generatebutton))
+if ($action == "builddoc" && $user->hasRight('facture','lire')  && ! GETPOST('button_search') && !empty($builddoc_generatebutton))
 {
 	if (is_array($_POST['toGenerate']))
 	{
@@ -405,9 +405,9 @@ $sql.= ", f.rowid as facid, f.".$ref_field.", f.ref_client, f.increment, f.".$to
 $sql.= ", f.datef as df, f.date_lim_reglement as datelimite";
 $sql.= ", f.paye as paye, f.fk_statut, f.type";
 $sql.= ", sum(pf.amount) as am";
-if (! $user->rights->societe->client->voir && ! $socid) $sql .= ", sc.fk_soc, sc.fk_user ";
+if ($user->hasRight('societe','client','lire')  && ! $socid) $sql .= ", sc.fk_soc, sc.fk_user ";
 $sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
-if (! $user->rights->societe->client->voir && ! $socid) $sql .= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
+if (! $user->hasRight('societe','client','voir')  && ! $socid) $sql .= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
 $sql.= ",".MAIN_DB_PREFIX."facture as f";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."paiement_facture as pf ON f.rowid=pf.fk_facture ";
 $sql.= " WHERE f.fk_soc = s.rowid";
@@ -419,7 +419,7 @@ else
 	$sql.= " AND fk_mode_reglement = 52";
 $sql.= " AND f.paye = 0";
 //if ($option == 'late') $sql.=" AND f.date_lim_reglement < '".$db->idate(dol_now() - $conf->facture->client->warning_delay)."'";
-if (! $user->rights->societe->client->voir && ! $socid) $sql .= " AND s.rowid = sc.fk_soc AND sc.fk_user = " .$user->id;
+if (! $user->hasRight('societe','client','voir') && ! $socid) $sql .= " AND s.rowid = sc.fk_soc AND sc.fk_user = " .$user->id;
 if (! empty($socid)) $sql .= " AND s.rowid = ".$socid;
 if (GETPOST('filtre'))
 {
@@ -437,7 +437,7 @@ if ($search_montant_ht)  $sql .= " AND f.".$total_field." = '".$db->escape($sear
 if ($search_montant_ttc) $sql .= " AND f.total_ttc = '".$db->escape($search_montant_ttc)."'";
 if (GETPOST('sf_ref'))   $sql .= " AND f.".$ref_field." LIKE '%".$db->escape(GETPOST('sf_ref'))."%'";
 $sql.= " GROUP BY s.nom, s.rowid, s.email, f.rowid, f.".$ref_field.", f.increment, f.".$total_field.", f.".$tva_field.", f.total_ttc, f.localtax1, f.localtax2, f.revenuestamp, f.datef, f.date_lim_reglement, f.paye, f.fk_statut, f.type ";
-if (! $user->rights->societe->client->voir && ! $socid) $sql .= ", sc.fk_soc, sc.fk_user ";
+if (! $user->hasRight('societe','client','voir') && ! $socid) $sql .= ", sc.fk_soc, sc.fk_user ";
 $sql.= " ORDER BY ";
 $listfield=explode(',',$sortfield);
 foreach ($listfield as $key => $value) $sql.=$listfield[$key]." ".$sortorder.",";
@@ -729,8 +729,8 @@ if ($resql)
 		 * Show list of available documents
 		 */
 		$filedir=$diroutputpdf;
-		$genallowed=$user->rights->facture->lire;
-		$delallowed=$user->rights->facture->lire;
+		$genallowed=$user->hasRight('facture', 'read');
+		$delallowed=$user->hasRight('facture', 'read');
 
 		print '<br>';
 		print '<input type="hidden" name="option" value="'.$option.'">';
