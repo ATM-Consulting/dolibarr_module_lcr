@@ -175,9 +175,9 @@ function lcr_pdf_create($db, $object, $modele, $outputlangs, $hidedetails=0, $hi
 	// Positionne le modele sur le nom du modele a utiliser
 	if (! dol_strlen($modele))
 	{
-		if (! empty($conf->global->FACTURE_ADDON_PDF))
+		if (! empty(getDolGlobalString('FACTURE_ADDON_PDF')))
 		{
-			$modele = $conf->global->FACTURE_ADDON_PDF;
+			$modele = getDolGlobalString('FACTURE_ADDON_PDF');
 		}
 		else
 		{
@@ -222,14 +222,14 @@ function lcr_pdf_create($db, $object, $modele, $outputlangs, $hidedetails=0, $hi
 		require_once $file;
 
 		$obj = new $classname($db);
-		
+
 		// Appel des triggers
 		include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
 		$interface=new Interfaces($db);
 		$result=$interface->run_triggers('BEFORE_BILL_LCR_BUILDDOC',$object,$user,$langs,$conf);
 		if ($result < 0) { $error++; $errors=$interface->errors; }
 		// Fin appel triggers
-		
+
 		// We save charset_output to restore it because write_file can change it if needed for
 		// output format that does not support UTF8.
 		$sav_charset_output=$outputlangs->charset_output;

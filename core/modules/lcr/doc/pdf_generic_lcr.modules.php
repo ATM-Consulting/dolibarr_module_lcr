@@ -5,7 +5,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/pdf.lib.php';
 
 class pdf_generic_lcr extends ModelePDFFactures {
-	
+
     var $db;
     var $name;
     var $description;
@@ -41,10 +41,10 @@ class pdf_generic_lcr extends ModelePDFFactures {
 		$this->page_largeur = $formatarray['width'];
 		$this->page_hauteur = $formatarray['height'];
 		$this->format = array($this->page_largeur,$this->page_hauteur);
-		$this->marge_gauche=isset($conf->global->MAIN_PDF_MARGIN_LEFT)?$conf->global->MAIN_PDF_MARGIN_LEFT:10;
-		$this->marge_droite=isset($conf->global->MAIN_PDF_MARGIN_RIGHT)?$conf->global->MAIN_PDF_MARGIN_RIGHT:10;
-		$this->marge_haute =isset($conf->global->MAIN_PDF_MARGIN_TOP)?$conf->global->MAIN_PDF_MARGIN_TOP:10;
-		$this->marge_basse =isset($conf->global->MAIN_PDF_MARGIN_BOTTOM)?$conf->global->MAIN_PDF_MARGIN_BOTTOM:10;
+		$this->marge_gauche=getDolGlobalString('MAIN_PDF_MARGIN_LEFT')?getDolGlobalString('MAIN_PDF_MARGIN_LEFT'):10;
+		$this->marge_droite=getDolGlobalString('MAIN_PDF_MARGIN_RIGHT')?getDolGlobalString('MAIN_PDF_MARGIN_RIGHT'):10;
+		$this->marge_haute =getDolGlobalString('MAIN_PDF_MARGIN_TOP')?getDolGlobalString('MAIN_PDF_MARGIN_TOP'):10;
+		$this->marge_basse =getDolGlobalString('MAIN_PDF_MARGIN_BOTTOM')?getDolGlobalString('MAIN_PDF_MARGIN_BOTTOM'):10;
 
 		$this->option_logo = 1;                    // Affiche logo
 		$this->option_tva = 1;                     // Gere option tva FACTURE_TVAOPTION
@@ -70,8 +70,8 @@ class pdf_generic_lcr extends ModelePDFFactures {
 		$this->posxqty=145;
 		$this->posxdiscount=162;
 		$this->postotalht=174;
-		if (! empty($conf->global->MAIN_GENERATE_DOCUMENTS_WITHOUT_VAT)) $this->posxtva=$this->posxup;
-		$this->posxpicture=$this->posxtva - (empty($conf->global->MAIN_DOCUMENTS_WITH_PICTURE_WIDTH)?20:$conf->global->MAIN_DOCUMENTS_WITH_PICTURE_WIDTH);	// width of images
+		if (! empty(getDolGlobalString('MAIN_GENERATE_DOCUMENTS_WITHOUT_VAT'))) $this->posxtva=$this->posxup;
+		$this->posxpicture=$this->posxtva - (empty(getDolGlobalString('MAIN_DOCUMENTS_WITH_PICTURE_WIDTH')?20:getDolGlobalString('MAIN_DOCUMENTS_WITH_PICTURE_WIDTH')));	// width of images
 		if ($this->page_largeur < 210) // To work with US executive format
 		{
 			$this->posxpicture-=20;
@@ -97,7 +97,7 @@ class pdf_generic_lcr extends ModelePDFFactures {
 
 		if (! is_object($outputlangs)) $outputlangs=$langs;
 		// For backward compatibility with FPDF, force output charset to ISO, because FPDF expect text to be encoded in ISO
-		if (! empty($conf->global->MAIN_USE_FPDF)) $outputlangs->charset_output='ISO-8859-1';
+		if (! empty(getDolGlobalInt('MAIN_USE_FPDF'))) $outputlangs->charset_output='ISO-8859-1';
 
 		$outputlangs->load("main");
 		$outputlangs->load("dict");
@@ -109,7 +109,7 @@ class pdf_generic_lcr extends ModelePDFFactures {
 		{
 			$dir = $conf->lcr->dir_output . "/";
 			$file = $dir . "" . 'lcr_'.date('YmdHis') . ".pdf";
-			
+
 			if (! file_exists($dir))
 			{
 				if (dol_mkdir($dir) < 0)
@@ -136,7 +136,7 @@ class pdf_generic_lcr extends ModelePDFFactures {
 					include_once DOL_DOCUMENT_ROOT.'/core/class/hookmanager.class.php';
 					$hookmanager=new HookManager($this->db);
 				}
-				
+
 				// Ne pas passer dans le hook des factures (pour concatpdf)
 				$object->element = 'lcr_facture';
 				$hookmanager->initHooks(array('pdfgeneration'));
@@ -144,8 +144,8 @@ class pdf_generic_lcr extends ModelePDFFactures {
 				global $action;
 				$reshook=$hookmanager->executeHooks('afterPDFCreation',$parameters,$this,$action);    // Note that $action and $object may have been modified by some hooks
 
-				if (! empty($conf->global->MAIN_UMASK))
-				@chmod($file, octdec($conf->global->MAIN_UMASK));
+				if (! empty(getDolGlobalString('MAIN_UMASK')))
+				@chmod($file, octdec(getDolGlobalString('MAIN_UMASK')));
 
 				return 1;   // Pas d'erreur
 			}
@@ -185,7 +185,7 @@ class pdf_generic_lcr extends ModelePDFFactures {
 
 		$pdf->SetXY($this->marge_gauche,$posy);
 		// Logo
-		if (empty($conf->global->PDF_DISABLE_MYCOMPANY_LOGO))
+		if (empty(getDolGlobalInt('PDF_DISABLE_MYCOMPANY_LOGO')))
 		{
 		    $logo=$conf->mycompany->dir_output.'/logos/'.$this->emetteur->logo;
 		    if ($this->emetteur->logo)
@@ -209,7 +209,7 @@ class pdf_generic_lcr extends ModelePDFFactures {
 		        $pdf->MultiCell($w, 4, $outputlangs->convToOutputCharset($text), 0, 'L');
 		    }
 		}
-		
+
 		$pdf->SetFont('','B', $default_font_size + 3);
 		$pdf->SetXY($posx,$posy);
 		$pdf->SetTextColor(0,0,60);
@@ -291,22 +291,22 @@ class pdf_generic_lcr extends ModelePDFFactures {
 		}
 
 		$posy+=1;
-		
+
 		if ($showaddress)
 		{
 		    // Sender properties
 		    $carac_emetteur = pdf_build_address($outputlangs, $this->emetteur, $object->thirdparty, '', 0, 'source', $object);
-		    
+
 		    // Show sender
-		    $posy=!empty($conf->global->MAIN_PDF_USE_ISO_LOCATION) ? 40 : 42;
+		    $posy=!empty(getDolGlobalString('MAIN_PDF_USE_ISO_LOCATION')) ? 40 : 42;
 		    $posy+=$top_shift;
 		    $posx=$this->marge_gauche;
-		    if (! empty($conf->global->MAIN_INVERT_SENDER_RECIPIENT)) $posx=$this->page_largeur-$this->marge_droite-80;
-		    
-		    $hautcadre=!empty($conf->global->MAIN_PDF_USE_ISO_LOCATION) ? 38 : 40;
-		    $widthrecbox=!empty($conf->global->MAIN_PDF_USE_ISO_LOCATION) ? 92 : 82;
-		    
-		    
+		    if (! empty(getDolGlobalString('MAIN_INVERT_SENDER_RECIPIENT'))) $posx=$this->page_largeur-$this->marge_droite-80;
+
+		    $hautcadre=!empty(getDolGlobalString('MAIN_PDF_USE_ISO_LOCATION')) ? 38 : 40;
+		    $widthrecbox=!empty(getDolGlobalString('MAIN_PDF_USE_ISO_LOCATION')) ? 92 : 82;
+
+
 		    // Show sender frame
 		    $pdf->SetTextColor(0,0,0);
 		    $pdf->SetFont('','', $default_font_size - 2);
@@ -316,20 +316,20 @@ class pdf_generic_lcr extends ModelePDFFactures {
 		    $pdf->SetFillColor(230,230,230);
 		    $pdf->MultiCell($widthrecbox, $hautcadre, "", 0, 'R', 1);
 		    $pdf->SetTextColor(0,0,60);
-		    
+
 		    // Show sender name
 		    $pdf->SetXY($posx+2,$posy+3);
 		    $pdf->SetFont('','B', $default_font_size);
 		    $pdf->MultiCell($widthrecbox-2, 4, $outputlangs->convToOutputCharset($this->emetteur->name), 0, 'L');
 		    $posy=$pdf->getY();
-		    
+
 		    // Show sender information
 		    $pdf->SetXY($posx+2,$posy);
 		    $pdf->SetFont('','', $default_font_size - 1);
 		    $pdf->MultiCell($widthrecbox-2, 4, $carac_emetteur, 0, 'L');
-		    
-		    
-		    
+
+
+
 		    // If BILLING contact defined on invoice, we use it
 		    $usecontact=false;
 		    $arrayidcontact=$object->getIdContact('external','BILLING');
@@ -338,102 +338,102 @@ class pdf_generic_lcr extends ModelePDFFactures {
 		        $usecontact=true;
 		        $result=$object->fetch_contact($arrayidcontact[0]);
 		    }
-		    
+
 		    //Recipient name
 		    // On peut utiliser le nom de la societe du contact
-		    if ($usecontact && !empty($conf->global->MAIN_USE_COMPANY_NAME_OF_CONTACT)) {
+		    if ($usecontact && !empty(getDolGlobalString('MAIN_USE_COMPANY_NAME_OF_CONTACT'))) {
 		        $thirdparty = $object->contact;
 		    } else {
 		        $thirdparty = $object->thirdparty;
 		    }
-		    
+
 		    $carac_client_name= pdfBuildThirdpartyName($thirdparty, $outputlangs);
-		    
+
 		    $carac_client=pdf_build_address($outputlangs,$this->emetteur,$object->thirdparty,($usecontact?$object->contact:''),$usecontact,'target',$object);
-		    
+
 		    // Show recipient
-		    $widthrecbox=!empty($conf->global->MAIN_PDF_USE_ISO_LOCATION) ? 92 : 100;
+		    $widthrecbox=!empty(getDolGlobalString('MAIN_PDF_USE_ISO_LOCATION')) ? 92 : 100;
 		    if ($this->page_largeur < 210) $widthrecbox=84;	// To work with US executive format
-		    $posy=!empty($conf->global->MAIN_PDF_USE_ISO_LOCATION) ? 40 : 42;
+		    $posy=!empty(getDolGlobalString('MAIN_PDF_USE_ISO_LOCATION')) ? 40 : 42;
 		    $posy+=$top_shift;
 		    $posx=$this->page_largeur-$this->marge_droite-$widthrecbox;
-		    if (! empty($conf->global->MAIN_INVERT_SENDER_RECIPIENT)) $posx=$this->marge_gauche;
-		    
+		    if (! empty(getDolGlobalString('MAIN_INVERT_SENDER_RECIPIENT'))) $posx=$this->marge_gauche;
+
 		    // Show recipient frame
 		    $pdf->SetTextColor(0,0,0);
 		    $pdf->SetFont('','', $default_font_size - 2);
 		    $pdf->SetXY($posx+2,$posy-5);
 		    $pdf->MultiCell($widthrecbox, 5, $outputlangs->transnoentities("BillTo").":",0,'L');
 		    $pdf->Rect($posx, $posy, $widthrecbox, $hautcadre);
-		    
+
 		    // Show recipient name
 		    $pdf->SetXY($posx+2,$posy+3);
 		    $pdf->SetFont('','B', $default_font_size);
 		    $pdf->MultiCell($widthrecbox, 2, $carac_client_name, 0, 'L');
-		    
+
 		    $posy = $pdf->getY();
-		    
+
 		    // Show recipient information
 		    $pdf->SetFont('','', $default_font_size - 1);
 		    $pdf->SetXY($posx+2,$posy);
 		    $pdf->MultiCell($widthrecbox, 4, $carac_client, 0, 'L');
 		}
-		
+
 		$pdf->SetTextColor(0,0,0);
 	}
 
 	function _showLCR($pdf, $object, $outputlangs, &$TtoGenerate)
 	{
 		global $db, $conf;
-		
+
 		//Gestion LCR /////////////////////////////////////////////////////////////////////
-	   	
+
 		$pdf->AddPage();
 		$posy =50;
 		$pdf->SetDrawColor(0,0,0);
-	
+
 		$default_font_size = pdf_getPDFFontSize($outputlangs);
 		$nb_facture = count($TtoGenerate);
-		
+
 		foreach($TtoGenerate as $ii => $ref_piece) {
-			
+
 			$f = new Facture($db);
 			$f->fetch('', $ref_piece);
 			$f->fetch_thirdparty();
 			$object = &$f;
-			
+
 			// Compatibilité Dolibarr >= 4.0
 			if(empty($object->client) && ! empty($object->thirdparty))
 			{
 				$object->client = $object->thirdparty;
 			}
 
-			if (!empty($conf->global->LCR_USE_REST_TO_PAY))
+			if (!empty(getDolGlobalString('LCR_USE_REST_TO_PAY')))
 			{
 				$deja_regle = $object->getSommePaiement();
 				$creditnoteamount=$object->getSumCreditNotesUsed();
 				$depositsamount=$object->getSumDepositsUsed();
-				$resteapayer = price2num($object->total_ttc - $deja_regle - $creditnoteamount - $depositsamount, 'MT');	
+				$resteapayer = price2num($object->total_ttc - $deja_regle - $creditnoteamount - $depositsamount, 'MT');
 			}
 			else
 			{
 				$resteapayer = price2num($object->total_ttc);
 			}
-			
-			
+
+
 			// ENTETE
-			if (!empty($conf->global->LCR_GENERATE_ONE_PER_PAGE_WiTH_ADDRESS))
+			if (!empty(getDolGlobalString('LCR_GENERATE_ONE_PER_PAGE_WiTH_ADDRESS')))
 			{
 				$this->_pagehead($pdf, $object, 1, $outputlangs);
 				$curx=$this->marge_gauche;
-				
+
 				$heightforinfotot = 78;	// Height reserved to output the info and total part
-		        $heightforfreetext= (isset($conf->global->MAIN_PDF_FREETEXT_HEIGHT)?$conf->global->MAIN_PDF_FREETEXT_HEIGHT:5);	// Height reserved to output the free text on last page
+		        $heightforfreetext= (getDolGlobalInt('MAIN_PDF_FREETEXT_HEIGHT')?getDolGlobalInt('MAIN_PDF_FREETEXT_HEIGHT'):5);	// Height reserved to output the free text on last page
 	            $heightforfooter = $this->marge_basse + 8;	// Height reserved to output the footer (value include bottom margin)
-	            
+
 				$bottomlasttab=$this->page_hauteur - $heightforinfotot - $heightforfreetext - $heightforfooter + 10;
 				$cury=$bottomlasttab;
-				
+
 				$pdf->SetLineStyle(array('dash'=>'1,1','color'=>array(200,200,200)));
 				$pdf->Line($curx, $cury-11, $this->page_largeur-$this->marge_droite, $cury-11);
 				$pdf->SetLineStyle(array('dash'=>0, 'color'=>array(0,0,0)));
@@ -441,21 +441,21 @@ class pdf_generic_lcr extends ModelePDFFactures {
 			else
 			{
 				$curx=$this->marge_gauche;
-				$cury=$posy-30;	
+				$cury=$posy-30;
 			}
-			
-					   
+
+
 			$pdf->SetFont('','', $default_font_size - 1);
 			$pdf->writeHTMLCell(53, 20, 10, $cury-8, $outputlangs->convToOutputCharset('MERCI DE NOUS RETOURNER LA PRESENTE TRAITE SOUS 8 JOURS.'), 0, 1, false, true, 'J',true);
-			
+
 			$pdf->SetFont('','', $default_font_size - 3);
 			$pdf->writeHTMLCell(45, 20, 68, $cury-8, $outputlangs->convToOutputCharset('Contre cette LETTRE DE CHANGE STIPULEE SANS FRAIS').'<br>'.$outputlangs->convToOutputCharset('Veuillez payer la somme indiquée ci-dessous à l\'ordre de'), 0, 1, false, true, 'J',true);
-			
+
 			$pdf->SetFont('','', $default_font_size - 2);
-			$adresse = $outputlangs->convToOutputCharset($conf->global->MAIN_INFO_SOCIETE_NOM) . '<br>' . nl2br($conf->global->MAIN_INFO_SOCIETE_ADDRESS) . '<br>' . $outputlangs->convToOutputCharset($conf->global->MAIN_INFO_SOCIETE_ZIP.' '.$conf->global->MAIN_INFO_SOCIETE_TOWN);
+			$adresse = $outputlangs->convToOutputCharset(getDolGlobalString('MAIN_INFO_SOCIETE_NOM')) . '<br>' . nl2br(getDolGlobalString('MAIN_INFO_SOCIETE_ADDRESS')) . '<br>' . $outputlangs->convToOutputCharset(getDolGlobalString('MAIN_INFO_SOCIETE_ZIP').' '.getDolGlobalString('MAIN_INFO_SOCIETE_TOWN'));
 			$pdf->writeHTMLCell(50, 20, 120, $cury-8, $adresse, 0, 1, false, true, 'J',true);
 
-			//Affichage code monnaie 
+			//Affichage code monnaie
 			$pdf->SetXY(180, $cury+1);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'',7);
 			$pdf->Cell(18, 0, "Code Monnaie",0,1,'C');
@@ -465,13 +465,13 @@ class pdf_generic_lcr extends ModelePDFFactures {
 
 			//Affichage lieu / date
 			//$town = !empty($this->emetteur->town) ? $this->emetteur->town : $this->emetteur->ville;
-			$town = $conf->global->MAIN_INFO_SOCIETE_TOWN;
-			
+			$town = getDolGlobalString('MAIN_INFO_SOCIETE_TOWN');
+
 			$cury+=5;
 			$pdf->SetXY(30, $cury);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'B',8);
 			$pdf->Cell(15, 0, "A ".$outputlangs->convToOutputCharset($town).", le",0,1,'R');
-			
+
 			// jolie fleche ...
 			$curx=43;
 			$cury+=2;
@@ -497,7 +497,7 @@ class pdf_generic_lcr extends ModelePDFFactures {
 			$pdf->SetXY($curx, $cury+4);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'B',8);
 			$pdf->Cell($largeur_cadre, 0, price($resteapayer),0,0,'C');
-					
+
 			$curx=$curx+$largeur_cadre+5;
 			$hauteur_cadre=8;
 			$largeur_cadre=25;
@@ -530,7 +530,7 @@ class pdf_generic_lcr extends ModelePDFFactures {
 			$pdf->SetXY($curx, $cury-1);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'',7);
 			$pdf->Cell($largeur_cadre, 0, "LCR Seulement",0,0,'C');
-			
+
 			$largeurportioncadre=30;
 			$pdf->Line($curx, $cury, $curx, $cury+$hauteur_cadre);
 			$pdf->Line($curx, $cury+$hauteur_cadre, $curx+$largeurportioncadre, $cury+$hauteur_cadre);
@@ -578,7 +578,7 @@ class pdf_generic_lcr extends ModelePDFFactures {
 			$pdf->Line($curx, $cury, $curx, $cury+$hauteur_cadre);
 			$pdf->Line($curx, $cury, $curx+$largeur_cadre/5, $cury);
 			$pdf->Line($curx, $cury+$hauteur_cadre, $curx+$largeur_cadre/5, $cury+$hauteur_cadre);
-			
+
 			$pdf->Line($curx+$largeur_cadre, $cury, $curx+$largeur_cadre, $cury+$hauteur_cadre);
 			$pdf->Line($curx+$largeur_cadre, $cury, $curx+$largeur_cadre*4/5, $cury);
 			$pdf->Line($curx+$largeur_cadre, $cury+$hauteur_cadre, $curx+$largeur_cadre*4/5, $cury+$hauteur_cadre);
@@ -591,7 +591,7 @@ class pdf_generic_lcr extends ModelePDFFactures {
 			$pdf->Line($curx, $cury, $curx, $cury+$hauteur_cadre);
 			$pdf->Line($curx, $cury, $curx+$largeur_cadre/5, $cury);
 			$pdf->Line($curx, $cury+$hauteur_cadre, $curx+$largeur_cadre/5, $cury+$hauteur_cadre);
-			
+
 			$pdf->Line($curx+$largeur_cadre, $cury, $curx+$largeur_cadre, $cury+$hauteur_cadre);
 			$pdf->Line($curx+$largeur_cadre, $cury, $curx+$largeur_cadre*4/5, $cury);
 			$pdf->Line($curx+$largeur_cadre, $cury+$hauteur_cadre, $curx+$largeur_cadre*4/5, $cury+$hauteur_cadre);
@@ -605,7 +605,7 @@ class pdf_generic_lcr extends ModelePDFFactures {
 			$pdf->Line($curx, $cury, $curx, $cury+$hauteur_cadre);
 			$pdf->Line($curx, $cury, $curx+$largeur_cadre/5, $cury);
 			$pdf->Line($curx, $cury+$hauteur_cadre, $curx+$largeur_cadre/5, $cury+$hauteur_cadre);
-			
+
 			$pdf->Line($curx+$largeur_cadre, $cury, $curx+$largeur_cadre, $cury+$hauteur_cadre);
 			$pdf->Line($curx+$largeur_cadre, $cury, $curx+$largeur_cadre*4/5, $cury);
 			$pdf->Line($curx+$largeur_cadre, $cury+$hauteur_cadre, $curx+$largeur_cadre*4/5, $cury+$hauteur_cadre);
@@ -613,7 +613,7 @@ class pdf_generic_lcr extends ModelePDFFactures {
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'B',8);
 // MB leave blank
 			//$pdf->Cell($largeur_cadre, 0, "R�f ",0,0,C);
- 
+
 				// RIB client
 			$cury=$cury+$hauteur_cadre+3;
 			$largeur_cadre=70;
@@ -622,7 +622,7 @@ class pdf_generic_lcr extends ModelePDFFactures {
 			$sql.= " FROM ".MAIN_DB_PREFIX ."societe_rib as rib";
 			$sql.= " WHERE rib.fk_soc = ".$object->client->id;
 			$sql.= ' ORDER BY default_rib DESC LIMIT 1'; // On veux en priorité le RIB par défaut si jamais on tombe sur le cas de +sieurs RIB mais pas de default alors on en prend qu'un
-			
+
 			$resql=$this->db->query($sql);
 			if ($resql)
 			{
@@ -658,7 +658,7 @@ class pdf_generic_lcr extends ModelePDFFactures {
 					$i++;
 				}
 			}
-//				
+//
 			$cury=$cury+$hauteur_cadre+3;
 			$curx=$this->marge_gauche;
 			$largeur_cadre=20;
@@ -682,7 +682,7 @@ class pdf_generic_lcr extends ModelePDFFactures {
 			$pdf->SetXY($curx+$largeur_cadre*5, $cury);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'',6);
 			$pdf->MultiCell($largeur_cadre*2, 4, "Signature du tireur",0,'C');
-			
+
 			$pdf->Line(0,$cury+40,$this->page_largeur, $cury+40);
 			$pdf->SetXY($curx+100, $cury+36);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'',6);
@@ -708,14 +708,14 @@ class pdf_generic_lcr extends ModelePDFFactures {
 			$pdf->SetXY($curx+$largeur_cadre+2, $cury-0.5);
 			$pdf->SetFont(pdf_getPDFFont($outputlangs),'B',8);
 			$pdf->MultiCell($largeur_cadre*2.5, 4, $outputlangs->convToOutputCharset(empty($object->client->siren) ? $object->client->idprof1 : $object->client->siren),1,'C');
-		
-			
-			
-			if (!empty($conf->global->LCR_GENERATE_ONE_PER_PAGE_WiTH_ADDRESS))
+
+
+
+			if (!empty(getDolGlobalString('LCR_GENERATE_ONE_PER_PAGE_WiTH_ADDRESS')))
 			{
 				// New page
 				if ($ii < $nb_facture-1) $pdf->AddPage();
-				
+
 			}
 			else
 			{
@@ -727,11 +727,11 @@ class pdf_generic_lcr extends ModelePDFFactures {
 					$posy=50;
 				}
 			}
-			
-			
+
+
 		}
 
 //fin mb ///////////
 	}
-	
+
 }
