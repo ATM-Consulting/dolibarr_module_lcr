@@ -405,7 +405,7 @@ $sql.= ", f.rowid as facid, f.".$ref_field.", f.ref_client, f.increment, f.".$to
 $sql.= ", f.datef as df, f.date_lim_reglement as datelimite";
 $sql.= ", f.paye as paye, f.fk_statut, f.type";
 $sql.= ", sum(pf.amount) as am";
-if ($user->hasRight('societe','client','lire')  && ! $socid) $sql .= ", sc.fk_soc, sc.fk_user ";
+if ($user->hasRight('societe','client','voir')  && ! $socid) $sql .= ", sc.fk_soc, sc.fk_user ";
 $sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
 if (! $user->hasRight('societe','client','voir')  && ! $socid) $sql .= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
 $sql.= ",".MAIN_DB_PREFIX."facture as f";
@@ -729,8 +729,8 @@ if ($resql)
 		 * Show list of available documents
 		 */
 		$filedir=$diroutputpdf;
-		$genallowed=$user->hasRight('facture', 'read');
-		$delallowed=$user->hasRight('facture', 'read');
+		$genallowed=$user->hasRight('facture', 'lire');
+		$delallowed=$user->hasRight('facture', 'lire');
 
 		print '<br>';
 		print '<input type="hidden" name="option" value="'.$option.'">';
