@@ -45,11 +45,11 @@ $mode=GETPOST('mode');
 $builddoc_generatebutton=GETPOST('builddoc_generatebutton');
 
 // Security check
-if ($user->societe_id) $socid=$user->societe_id;
+if (isset($user->societe_id)) $socid=$user->societe_id;
 $result = restrictedArea($user,'facture',$id,'');
 
 $diroutputpdf=$conf->lcr->dir_output;
-if (! $user->rights->societe->client->voir || $socid) $diroutputpdf.='/private/'.$user->id;	// If user has no permission to see all, output dir is specific to user
+if ($user->hasRight('societe','client','read') || isset($socid)) $diroutputpdf.='/private/'.$user->id;	// If user has no permission to see all, output dir is specific to user
 
 $resultmasssend='';
 
@@ -126,7 +126,7 @@ if ($action == 'presend' && GETPOST('sendmail'))
 						$substitutionarray=array(
 							'__ID__' => $object->id,
 							'__EMAIL__' => $object->thirdparty->email,
-							'__CHECK_READ__' => '<img src="'.DOL_MAIN_URL_ROOT.'/public/emailing/mailing-read.php?tag='.$obj2->tag.'&securitykey='.urlencode($conf->global->MAILING_EMAIL_UNSUBSCRIBE_KEY).'" width="1" height="1" style="width:1px;height:1px" border="0"/>',
+							'__CHECK_READ__' => '<img src="'.DOL_MAIN_URL_ROOT.'/public/emailing/mailing-read.php?tag='.$obj2->tag.'&securitykey='.urlencode(getDolGlobalString('MAILING_EMAIL_UNSUBSCRIBE_KEY')).'" width="1" height="1" style="width:1px;height:1px" border="0"/>',
 							//'__LASTNAME__' => $obj2->lastname,
 							//'__FIRSTNAME__' => $obj2->firstname,
 							'__REF__' => $object->ref,
@@ -232,7 +232,7 @@ if ($action == 'presend' && GETPOST('sendmail'))
 }
 
 
-if ($action == "builddoc" && $user->rights->facture->lire && ! GETPOST('button_search') && !empty($builddoc_generatebutton))
+if ($action == "builddoc" && $user->hasRight('facture','lire')  && ! GETPOST('button_search') && !empty($builddoc_generatebutton))
 {
 	if (is_array($_POST['toGenerate']))
 	{
@@ -257,8 +257,8 @@ if ($action == "builddoc" && $user->rights->facture->lire && ! GETPOST('button_s
         // Define output language (Here it is not used because we do only merging existing PDF)
         $outputlangs = $langs;
         $newlang='';
-        if ($conf->global->MAIN_MULTILANGS && empty($newlang) && GETPOST('lang_id')) $newlang=GETPOST('lang_id');
-        if ($conf->global->MAIN_MULTILANGS && empty($newlang)) $newlang=! empty($object->thirdparty->default_lang) ? $object->thirdparty->default_lang : $object->client->default_lang;
+        if (getDolGlobalString('MAIN_MULTILANGS') && empty($newlang) && GETPOST('lang_id')) $newlang=GETPOST('lang_id');
+        if (getDolGlobalString('MAIN_MULTILANGS') && empty($newlang)) $newlang=! empty($object->thirdparty->default_lang) ? $object->thirdparty->default_lang : $object->client->default_lang;
         if (! empty($newlang))
         {
             $outputlangs = new Translate("",$conf);
@@ -274,15 +274,15 @@ if ($action == "builddoc" && $user->rights->facture->lire && ! GETPOST('button_s
         }
         $pdf->SetFont(pdf_getPDFFont($outputlangs));
 
-        if (! empty($conf->global->MAIN_DISABLE_PDF_COMPRESSION)) $pdf->SetCompression(false);
+        if (getDolGlobalString('MAIN_DISABLE_PDF_COMPRESSION')) $pdf->SetCompression(false);
 
 		dol_include_once('/lcr/core/modules/lcr/modules_lcr.php');
-		
+
 		//$doc = new generic_pdf_lcr($db);
 		$TtoGenerate = $_REQUEST['toGenerate'];
 		$object = new Facture($db);
-		$result = lcr_pdf_create($db, $object, 'generic_lcr', $outputlangs, $hidedetails, $hidedesc, $hideref, $TtoGenerate);
-		
+		$result = lcr_pdf_create($db, $object, 'generic_lcr', $outputlangs, '', '', '', $TtoGenerate);
+
 		// Add all others
 		/*foreach($files as $file)
 		{
@@ -303,20 +303,21 @@ if ($action == "builddoc" && $user->rights->facture->lire && ! GETPOST('button_s
 		// Save merged file
 		$filename=strtolower(dol_sanitizeFileName($langs->transnoentities("Unpaid")));
 		if ($option=='late') $filename.='_'.strtolower(dol_sanitizeFileName($langs->transnoentities("Late")));
+		$pagecount = 0;
 		if ($pagecount)
 		{
 			$now=dol_now();
 			$file=$diroutputpdf.'/'.$filename.'_'.dol_print_date($now,'dayhourlog').'.pdf';
 			$pdf->Output($file,'F');
-			if (! empty($conf->global->MAIN_UMASK))
-			@chmod($file, octdec($conf->global->MAIN_UMASK));
+			if (getDolGlobalString('MAIN_UMASK'))
+			@chmod($file, octdec(getDolGlobalString('MAIN_UMASK')));
 		}
 	}
 
-} elseif(is_array($_POST['toGenerate']) && isset($_REQUEST['generateCSV'])) {
-		
+} elseif (isset($_POST['toGenerate']) && is_array($_POST['toGenerate']) && isset($_REQUEST['generateCSV'])) {
+
 	generateCSV();
-	
+
 }
 
 // Remove file
@@ -405,21 +406,21 @@ $sql.= ", f.rowid as facid, f.".$ref_field.", f.ref_client, f.increment, f.".$to
 $sql.= ", f.datef as df, f.date_lim_reglement as datelimite";
 $sql.= ", f.paye as paye, f.fk_statut, f.type";
 $sql.= ", sum(pf.amount) as am";
-if (! $user->rights->societe->client->voir && ! $socid) $sql .= ", sc.fk_soc, sc.fk_user ";
-$sql.= " FROM ".MAIN_DB_PREFIX."societe as s";
-if (! $user->rights->societe->client->voir && ! $socid) $sql .= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
-$sql.= ",".MAIN_DB_PREFIX."facture as f";
-$sql.= " LEFT JOIN ".MAIN_DB_PREFIX."paiement_facture as pf ON f.rowid=pf.fk_facture ";
+if ($user->hasRight('societe','client','read')  && ! $socid) $sql .= ", sc.fk_soc, sc.fk_user ";
+$sql.= " FROM ".$db->prefix()."societe as s";
+if (! $user->hasRight('societe','client','voir')  && ! $socid) $sql .= ", ".$db->prefix()."societe_commerciaux as sc";
+$sql.= ",".$db->prefix()."facture as f";
+$sql.= " LEFT JOIN ".$db->prefix()."paiement_facture as pf ON f.rowid=pf.fk_facture ";
 $sql.= " WHERE f.fk_soc = s.rowid";
 $sql.= " AND f.entity = ".$conf->entity;
 $sql.= " AND f.type IN (0,1,3) AND f.fk_statut = 1";
-if(!empty($conf->global->LCR_PAIEMENT_MODE))
-	$sql.= " AND fk_mode_reglement = ".$conf->global->LCR_PAIEMENT_MODE;
+if(getDolGlobalString('LCR_PAIEMENT_MODE'))
+	$sql.= " AND fk_mode_reglement = ".getDolGlobalString('LCR_PAIEMENT_MODE');
 else
 	$sql.= " AND fk_mode_reglement = 52";
 $sql.= " AND f.paye = 0";
 //if ($option == 'late') $sql.=" AND f.date_lim_reglement < '".$db->idate(dol_now() - $conf->facture->client->warning_delay)."'";
-if (! $user->rights->societe->client->voir && ! $socid) $sql .= " AND s.rowid = sc.fk_soc AND sc.fk_user = " .$user->id;
+if (! $user->hasRight('societe','client','voir') && ! $socid) $sql .= " AND s.rowid = sc.fk_soc AND sc.fk_user = " .$user->id;
 if (! empty($socid)) $sql .= " AND s.rowid = ".$socid;
 if (GETPOST('filtre'))
 {
@@ -437,7 +438,7 @@ if ($search_montant_ht)  $sql .= " AND f.".$total_field." = '".$db->escape($sear
 if ($search_montant_ttc) $sql .= " AND f.total_ttc = '".$db->escape($search_montant_ttc)."'";
 if (GETPOST('sf_ref'))   $sql .= " AND f.".$ref_field." LIKE '%".$db->escape(GETPOST('sf_ref'))."%'";
 $sql.= " GROUP BY s.nom, s.rowid, s.email, f.rowid, f.".$ref_field.", f.increment, f.".$total_field.", f.".$tva_field.", f.total_ttc, f.localtax1, f.localtax2, f.revenuestamp, f.datef, f.date_lim_reglement, f.paye, f.fk_statut, f.type ";
-if (! $user->rights->societe->client->voir && ! $socid) $sql .= ", sc.fk_soc, sc.fk_user ";
+if (! $user->hasRight('societe','client','voir') && ! $socid) $sql .= ", sc.fk_soc, sc.fk_user ";
 $sql.= " ORDER BY ";
 $listfield=explode(',',$sortfield);
 foreach ($listfield as $key => $value) $sql.=$listfield[$key]." ".$sortorder.",";
@@ -508,7 +509,7 @@ if ($resql)
 		$formmail->withtofree=0;
 		$formmail->withtoreadonly=1;
 		$formmail->withtocc=1;
-		$formmail->withtoccc=$conf->global->MAIN_EMAIL_USECCC;
+		$formmail->withtoccc=getDolGlobalString('MAIN_EMAIL_USECCC');
 		$formmail->withtopic=$langs->transnoentities($topicmail, '__FACREF__', '__REFCLIENT__');
 		$formmail->withfile=$langs->trans("EachInvoiceWillBeAttachedToEmail");
 		$formmail->withbody=1;
@@ -729,25 +730,25 @@ if ($resql)
 		 * Show list of available documents
 		 */
 		$filedir=$diroutputpdf;
-		$genallowed=$user->rights->facture->lire;
-		$delallowed=$user->rights->facture->lire;
+		$genallowed=$user->hasRight('facture', 'lire');
+		$delallowed=$user->hasRight('facture', 'lire');
 
 		print '<br>';
 		print '<input type="hidden" name="option" value="'.$option.'">';
 		// We disable multilang because we concat already existing pdf.
 		//echo $filedir;exit;
 		$formfile->show_documents('lcr','',$filedir,$urlsource,$genallowed,$delallowed,'',1,1,0,48,1,$param,$langs->trans("Fichier LCR générés"),$langs->trans("Fusion LCR"));
-		
+
 		?>
-		
+
 			<script type="text/javascript">
-				
+
 				$("#builddoc_generatebutton").parent().append(' <input class="button" type="SUBMIT" name="generateCSV" value="Générer CSV">');
-				
+
 			</script>
-		
+
 		<?php
-		
+
 	}
 	else
 	{

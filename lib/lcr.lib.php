@@ -45,7 +45,7 @@ function lcrPrepareHead()
     //$this->tabs = array(
     //	'entity:-tabname:Title:@lcr:/lcr/mypage.php?id=__ID__'
     //); // to remove a tab
-    complete_head_from_modules($conf, $langs, $object, $head, $h, 'lcr');
+    complete_head_from_modules($conf, $langs, null, $head, $h, 'lcr');
 
     return $head;
 }
@@ -76,23 +76,26 @@ function lcrAdminPrepareHead()
     //$this->tabs = array(
     //	'entity:-tabname:Title:@lcr:/lcr/mypage.php?id=__ID__'
     //); // to remove a tab
-    complete_head_from_modules($conf, $langs, $object, $head, $h, 'lcr');
+    complete_head_from_modules($conf, $langs, null, $head, $h, 'lcr');
 
     return $head;
 }
 
 function generateCSV() {
-	
+
 	global $db, $conf;
-	
+
 	$TFactRef = $_REQUEST['toGenerate'];
-	
+
 	// Création et attribution droits fichier
 	$dir = $conf->lcr->dir_output;
+	if (!is_dir($dir)) {
+		mkdir($dir);
+	}
 	$filename = 'lcr_'.date('YmdHis').'.csv';
 	$f = fopen($dir.'/'.$filename, 'w+');
 	chmod($dir.'/'.$filename, 0777);
-	
+
 	$TTitle = array(
 						'Code client'
 						,'Raison sociale'
@@ -112,16 +115,16 @@ function generateCSV() {
 						,'Date de création'
 						,'Date d\'échéance'
 					);
-	
+
 	fputcsv($f, $TTitle, ';');
-	
+
 	$fact = new Facture($db);
 	$s = new Societe($db);
-		
+
 	foreach($TFactRef as $ref_fact) {
 
 		if($fact->fetch('', $ref_fact) > 0 && $s->fetch($fact->socid) > 0) {
-			
+
 			$rib = $s->get_all_rib();
 			$iban='';
 			if(!empty($rib)) {
@@ -162,9 +165,9 @@ function generateCSV() {
 					, ';'
 				);
 		}
-		
+
 	}
-	
+
 	fclose($f);
-	
+
 }
