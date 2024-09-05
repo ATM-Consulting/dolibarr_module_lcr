@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 
 
 ## Version 3.1
+- FIX : Correction phpmin en 7 - *05/09/2024* - 3.2
 - FIX : Correction du phpmin - *05/09/2024* - 3.1.1
 - NEW : Comapt V19 - *24/08/2024* - 3.1.0
 
