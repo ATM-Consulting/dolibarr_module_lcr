@@ -17,154 +17,179 @@
  */
 
 /**
- *	\file		lib/lcr.lib.php
- *	\ingroup	lcr
- *	\brief		This file is an example module library
- *				Put some comments here
+ *    \file        lib/lcr.lib.php
+ *    \ingroup    lcr
+ *    \brief        This file is an example module library
+ *                Put some comments here
  */
 
 function lcrPrepareHead()
 {
-    global $langs, $conf;
+	global $langs, $conf;
 
-    $langs->load("lcr@lcr");
+	$langs->load("lcr@lcr");
 
-    $h = 0;
-    $head = array();
+	$h = 0;
+	$head = array();
 
-    $head[$h][0] = dol_buildpath("/lcr/lcr.php", 1);
-    $head[$h][1] = $langs->trans("LCR");
-    $head[$h][2] = 'lcr';
-    $h++;
+	$head[$h][0] = dol_buildpath("/lcr/lcr.php", 1);
+	$head[$h][1] = $langs->trans("LCR");
+	$head[$h][2] = 'lcr';
+	$h++;
 
-    // Show more tabs from modules
-    // Entries must be declared in modules descriptor with line
-    //$this->tabs = array(
-    //	'entity:+tabname:Title:@lcr:/lcr/mypage.php?id=__ID__'
-    //); // to add new tab
-    //$this->tabs = array(
-    //	'entity:-tabname:Title:@lcr:/lcr/mypage.php?id=__ID__'
-    //); // to remove a tab
-    complete_head_from_modules($conf, $langs, $object, $head, $h, 'lcr');
+	// Show more tabs from modules
+	// Entries must be declared in modules descriptor with line
+	//$this->tabs = array(
+	//	'entity:+tabname:Title:@lcr:/lcr/mypage.php?id=__ID__'
+	//); // to add new tab
+	//$this->tabs = array(
+	//	'entity:-tabname:Title:@lcr:/lcr/mypage.php?id=__ID__'
+	//); // to remove a tab
+	complete_head_from_modules($conf, $langs, $object, $head, $h, 'lcr');
 
-    return $head;
+	return $head;
 }
 
 function lcrAdminPrepareHead()
 {
-    global $langs, $conf;
+	global $langs, $conf;
 
-    $langs->load("lcr@lcr");
+	$langs->load("lcr@lcr");
 
-    $h = 0;
-    $head = array();
+	$h = 0;
+	$head = array();
 
-    $head[$h][0] = dol_buildpath("/lcr/admin/lcr_setup.php", 1);
-    $head[$h][1] = $langs->trans("Parameters");
-    $head[$h][2] = 'settings';
-    $h++;
-    $head[$h][0] = dol_buildpath("/lcr/admin/lcr_about.php", 1);
-    $head[$h][1] = $langs->trans("About");
-    $head[$h][2] = 'about';
-    $h++;
+	$head[$h][0] = dol_buildpath("/lcr/admin/lcr_setup.php", 1);
+	$head[$h][1] = $langs->trans("Parameters");
+	$head[$h][2] = 'settings';
+	$h++;
+	$head[$h][0] = dol_buildpath("/lcr/admin/lcr_about.php", 1);
+	$head[$h][1] = $langs->trans("About");
+	$head[$h][2] = 'about';
+	$h++;
 
-    // Show more tabs from modules
-    // Entries must be declared in modules descriptor with line
-    //$this->tabs = array(
-    //	'entity:+tabname:Title:@lcr:/lcr/mypage.php?id=__ID__'
-    //); // to add new tab
-    //$this->tabs = array(
-    //	'entity:-tabname:Title:@lcr:/lcr/mypage.php?id=__ID__'
-    //); // to remove a tab
-    complete_head_from_modules($conf, $langs, $object, $head, $h, 'lcr');
+	// Show more tabs from modules
+	// Entries must be declared in modules descriptor with line
+	//$this->tabs = array(
+	//	'entity:+tabname:Title:@lcr:/lcr/mypage.php?id=__ID__'
+	//); // to add new tab
+	//$this->tabs = array(
+	//	'entity:-tabname:Title:@lcr:/lcr/mypage.php?id=__ID__'
+	//); // to remove a tab
+	complete_head_from_modules($conf, $langs, $object, $head, $h, 'lcr');
 
-    return $head;
+	return $head;
 }
 
-function generateCSV() {
-	
-	global $db, $conf;
-	
-	$TFactRef = $_REQUEST['toGenerate'];
-	
-	// Création et attribution droits fichier
+function generateCSV()
+{
+
+	global $db, $conf, $langs;
+
+	$TFactRef = $_REQUEST['toGenerate'] ?? [];
+
+
 	$dir = $conf->lcr->dir_output;
-	$filename = 'lcr_'.date('YmdHis').'.csv';
-	$f = fopen($dir.'/'.$filename, 'w+');
-	chmod($dir.'/'.$filename, 0777);
-	
-	$TTitle = array(
-						'Code client'
-						,'Raison sociale'
-						,'Adresse 1'
-						,'Adresse 2'
-						,'Code postal'
-						,'Ville'
-						,'Téléphone'
-						,'Référence'
-						,'SIREN'
-						,'RIB'
-						,'Agence'
-						,'Montant'
-						,'Monnaie'
-						,'Accepté'
-						,'Référence'
-						,'Date de création'
-						,'Date d\'échéance'
-					);
-	
-	fputcsv($f, $TTitle, ';');
-	
-	$fact = new Facture($db);
-	$s = new Societe($db);
-		
-	foreach($TFactRef as $ref_fact) {
 
-		if($fact->fetch('', $ref_fact) > 0 && $s->fetch($fact->socid) > 0) {
-			
-			$rib = $s->get_all_rib();
-			$iban='';
-			if(!empty($rib)) {
-				$iban = $rib[0]->iban;
-				foreach($rib as $i_rib=>&$obj_rib) {
-					if(!empty($obj_rib->default_rib)) {
-						$iban = $obj_rib->iban;
-						break;
-					}
-				}
-			}
-
-			$total_facture = $fact->total_ttc;
-			$total_facture -= $fact->getSumCreditNotesUsed();
-			$total_facture -= $fact->getSumDepositsUsed();
-
-			fputcsv(
-					$f
-					,array(
-							$s->code_client
-							,$s->name
-							,$s->address
-							,'' // Adresse 2
-							,$s->zip
-							,$s->town
-							,$s->phone
-							,$ref_fact
-							,$s->idprof1
-							,$iban
-							,'' // Agence
-							,price($total_facture-$fact->getSommePaiement())
-							,'E'
-							,1
-							,$ref_fact
-							,date('d/m/Y', $fact->date)
-							,date('d/m/Y', $fact->date_lim_reglement)
-						  )
-					, ';'
-				);
-		}
-		
+	if (!is_dir($dir)) {
+		mkdir($dir, 0777, true);
 	}
-	
-	fclose($f);
-	
+
+	$filename = 'lcr_' . date('YmdHis') . '.csv';
+	$filepath = $dir . '/' . $filename;
+
+	$f = fopen($filepath, 'w+');
+
+	if (!$f) {
+		dol_syslog("unable to create file {$filepath}", LOG_ERR);
+		setEventMessage($langs->trans("LCR_ERRORCREATFILE", $filepath), 'errors');
+	}
+
+	chmod($filepath, 0777);
+
+	$filename = 'lcr_' . date('YmdHis') . '.csv';
+	$f = fopen($dir . '/' . $filename, 'w+');
+	chmod($dir . '/' . $filename, 0777);
+
+	$TTitle = array(
+		'Code client'
+	, 'Raison sociale'
+	, 'Adresse 1'
+	, 'Adresse 2'
+	, 'Code postal'
+	, 'Ville'
+	, 'Téléphone'
+	, 'Référence'
+	, 'SIREN'
+	, 'RIB'
+	, 'Agence'
+	, 'Montant'
+	, 'Monnaie'
+	, 'Accepté'
+	, 'Référence'
+	, 'Date de création'
+	, 'Date d\'échéance'
+	);
+
+	if ($f !== false) {
+		fputcsv($f, $TTitle, ';');
+		$fact = new Facture($db);
+		$s = new Societe($db);
+
+		if (is_array($TFactRef) && !empty($TFactRef)) {
+			foreach ($TFactRef as $ref_fact) {
+
+				if ($fact->fetch('', $ref_fact) > 0 && $s->fetch($fact->socid) > 0) {
+
+					$rib = $s->get_all_rib();
+					$iban = '';
+					if (!empty($rib)) {
+						$iban = $rib[0]->iban;
+						foreach ($rib as $i_rib => &$obj_rib) {
+							if (!empty($obj_rib->default_rib)) {
+								$iban = $obj_rib->iban;
+								break;
+							}
+						}
+					}
+
+					$total_facture = $fact->total_ttc;
+					$total_facture -= $fact->getSumCreditNotesUsed();
+					$total_facture -= $fact->getSumDepositsUsed();
+
+					fputcsv(
+						$f
+						, array(
+							$s->code_client
+						, $s->name
+						, $s->address
+						, '' // Adresse 2
+						, $s->zip
+						, $s->town
+						, $s->phone
+						, $ref_fact
+						, $s->idprof1
+						, $iban
+						, '' // Agence
+						, price($total_facture - $fact->getSommePaiement())
+						, 'E'
+						, 1
+						, $ref_fact
+						, date('d/m/Y', $fact->date)
+						, date('d/m/Y', $fact->date_lim_reglement)
+						)
+						, ';'
+					);
+				}
+
+			}
+		}
+
+
+		fclose($f);
+	} else {
+		dol_syslog("Unable to open file", LOG_ERR);
+		setEventMessage($langs->trans("LCR_ERROROPENFILE"), 'errors');
+	}
+
 }
