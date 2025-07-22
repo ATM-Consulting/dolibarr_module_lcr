@@ -59,7 +59,7 @@ if (preg_match('/set_(.*)/',$action,$reg))
 		dol_print_error($db);
 	}
 }
-	
+
 if (preg_match('/del_(.*)/',$action,$reg))
 {
 	$code=$reg[1];
@@ -114,7 +114,7 @@ print '<td align="right" width="300">';
 print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
 print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
 print '<input type="hidden" name="action" value="set_LCR_GENERATE_ONE_PER_PAGE_WiTH_ADDRESS">';
-print $form->selectyesno("LCR_GENERATE_ONE_PER_PAGE_WiTH_ADDRESS",$conf->global->LCR_GENERATE_ONE_PER_PAGE_WiTH_ADDRESS,1);
+print $form->selectyesno("LCR_GENERATE_ONE_PER_PAGE_WiTH_ADDRESS",getDolGlobalString('LCR_GENERATE_ONE_PER_PAGE_WiTH_ADDRESS'),1);
 print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
 print '</form>';
 print '</td></tr>';
@@ -127,7 +127,7 @@ print '<td align="right" width="300">';
 print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
 print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
 print '<input type="hidden" name="action" value="set_LCR_USE_REST_TO_PAY">';
-print $form->selectyesno("LCR_USE_REST_TO_PAY",$conf->global->LCR_USE_REST_TO_PAY,1);
+print $form->selectyesno("LCR_USE_REST_TO_PAY",getDolGlobalInt('LCR_USE_REST_TO_PAY'),1);
 print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
 print '</form>';
 print '</td></tr>';
@@ -140,7 +140,7 @@ print '<td align="right" width="300">';
 print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
 print '<input type="hidden" name="token" value="'.$_SESSION['newtoken'].'">';
 print '<input type="hidden" name="action" value="set_LCR_PAIEMENT_MODE">';
-print $form->select_types_paiements($conf->global->LCR_PAIEMENT_MODE, 'LCR_PAIEMENT_MODE', '', 0, 0, 1);
+print $form->select_types_paiements(getDolGlobalString('LCR_PAIEMENT_MODE'), 'LCR_PAIEMENT_MODE', '', 0, 0, 1);
 print '<input type="submit" class="button" value="'.$langs->trans("Modify").'">';
 print '</form>';
 print '</td></tr>';

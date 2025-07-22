@@ -20,62 +20,58 @@
  */
 
 /**
- *    \file       htdocs/core/modules/facture/modules_facture.php
- *    \ingroup    facture
- *    \brief      Fichier contenant la classe mere de generation des factures en PDF
- *                et la classe mere de numerotation des factures
+ *	\file       htdocs/core/modules/facture/modules_facture.php
+ *	\ingroup    facture
+ *	\brief      Fichier contenant la classe mere de generation des factures en PDF
+ * 				et la classe mere de numerotation des factures
  */
 
-require_once DOL_DOCUMENT_ROOT . '/core/class/commondocgenerator.class.php';
-require_once DOL_DOCUMENT_ROOT . '/product/class/product.class.php';
-require_once DOL_DOCUMENT_ROOT . '/compta/bank/class/account.class.php';   // Requis car utilise dans les classes qui heritent
+require_once DOL_DOCUMENT_ROOT.'/core/class/commondocgenerator.class.php';
+require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
+require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';   // Requis car utilise dans les classes qui heritent
 
 
 /**
- *    Parent class of invoice document generators
+ *	Parent class of invoice document generators
  */
 abstract class ModeleLcr extends CommonDocGenerator
 {
-	var $error = '';
+	var $error='';
 
 	/**
 	 *  Return list of active generation modules
 	 *
-	 * @param DoliDB $db Database handler
-	 * @param string $maxfilenamelength Max length of value to show
-	 * @return    array                        List of templates
+     *  @param	DoliDB	$db     			Database handler
+     *  @param  string	$maxfilenamelength  Max length of value to show
+     *  @return	array						List of templates
 	 */
-	static function liste_modeles($db, $maxfilenamelength = 0)
+	static function liste_modeles($db,$maxfilenamelength=0)
 	{
 		global $conf;
 
-		$type = 'invoice';
-		$liste = array();
+		$type='invoice';
+		$liste=array();
 
-		include_once DOL_DOCUMENT_ROOT . '/core/lib/functions2.lib.php';
-		$liste = getListOfModels($db, $type, $maxfilenamelength);
+		include_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
+		$liste=getListOfModels($db,$type,$maxfilenamelength);
 
 		return $liste;
 	}
 }
 
-if ((float)DOL_VERSION >= 8.0) {
-	abstract class ModelePDFLcr extends ModeleLcr
-	{
-	}
-}
+if((float)DOL_VERSION >= 8.0) {abstract class ModelePDFLcr extends ModeleLcr {}}
 
 /**
- *    Classe mere des modeles de numerotation des references de facture
+ *	Classe mere des modeles de numerotation des references de facture
  */
 abstract class ModeleNumRefLCR
 {
-	var $error = '';
+	var $error='';
 
 	/**
 	 * Return if a module can be used or not
 	 *
-	 * @return    boolean     true if module can be used
+	 * @return	boolean     true if module can be used
 	 */
 	function isEnabled()
 	{
@@ -97,7 +93,7 @@ abstract class ModeleNumRefLCR
 	/**
 	 * Renvoi un exemple de numerotation
 	 *
-	 * @return    string      Example
+	 * @return	string      Example
 	 */
 	function getExample()
 	{
@@ -110,7 +106,7 @@ abstract class ModeleNumRefLCR
 	 * Test si les numeros deja en vigueur dans la base ne provoquent pas
 	 * de conflits qui empecheraient cette numerotation de fonctionner.
 	 *
-	 * @return    boolean     false si conflit, true si ok
+	 * @return	boolean     false si conflit, true si ok
 	 */
 	function canBeActivated()
 	{
@@ -120,11 +116,11 @@ abstract class ModeleNumRefLCR
 	/**
 	 * Renvoi prochaine valeur attribuee
 	 *
-	 * @param Societe $objsoc Objet societe
-	 * @param Facture $facture Objet facture
-	 * @return  string                Value
+	 * @param	Societe		$objsoc		Objet societe
+	 * @param   Facture		$facture	Objet facture
+	 * @return  string      			Value
 	 */
-	function getNextValue($objsoc, $facture)
+	function getNextValue($objsoc,$facture)
 	{
 		global $langs;
 		return $langs->trans("NotAvailable");
@@ -151,93 +147,98 @@ abstract class ModeleNumRefLCR
 /**
  *  Create a document onto disk according to template module.
  *
- * @param DoliDB $db Database handler
- * @param Object $object Object invoice
- * @param string $modele Force template to use ('' to not force)
- * @param Translate $outputlangs objet lang a utiliser pour traduction
- * @param int $hidedetails Hide details of lines
- * @param int $hidedesc Hide description
- * @param int $hideref Hide ref
- * @return int                            <0 if KO, >0 if OK
+ *	@param	DoliDB		$db  			Database handler
+ *	@param  Object		$object			Object invoice
+ *	@param	string		$modele			Force template to use ('' to not force)
+ *	@param	Translate	$outputlangs	objet lang a utiliser pour traduction
+ *  @param  int			$hidedetails    Hide details of lines
+ *  @param  int			$hidedesc       Hide description
+ *  @param  int			$hideref        Hide ref
+ *	@return int        					<0 if KO, >0 if OK
  */
-function lcr_pdf_create($db, $object, $modele, $outputlangs, $hidedetails = 0, $hidedesc = 0, $hideref = 0)
+function lcr_pdf_create($db, $object, $modele, $outputlangs, $hidedetails=0, $hidedesc=0, $hideref=0, &$TtoGenerate)
 {
-	global $conf, $user, $langs;
+	global $conf,$user,$langs;
 
 	$langs->load("bills");
 
-	$error = 0;
+	$error=0;
 
 	// Increase limit for PDF build
-	$err = error_reporting();
-	error_reporting(0);
-	@set_time_limit(120);
-	error_reporting($err);
+    $err=error_reporting();
+    error_reporting(0);
+    @set_time_limit(120);
+    error_reporting($err);
 
-	$srctemplatepath = '';
+    $srctemplatepath='';
 
 	// Positionne le modele sur le nom du modele a utiliser
-	if (!dol_strlen($modele)) {
-		if (!dol_strlen($modele)) {
-			$modele = getDolGlobalString('FACTURE_ADDON_PDF', 'crabe');
-		} else {
+	if (! dol_strlen($modele))
+	{
+		if (getDolGlobalString('FACTURE_ADDON_PDF'))
+		{
+			$modele = getDolGlobalString('FACTURE_ADDON_PDF');
+		}
+		else
+		{
 			$modele = 'crabe';
 		}
 	}
 
-	// If selected modele is a filename template (then $modele="modelname:filename")
-	$tmp = explode(':', $modele, 2);
-	if (!empty($tmp[1])) {
-		$modele = $tmp[0];
-		$srctemplatepath = $tmp[1];
-	}
+    // If selected modele is a filename template (then $modele="modelname:filename")
+	$tmp=explode(':',$modele,2);
+    if (! empty($tmp[1]))
+    {
+        $modele=$tmp[0];
+        $srctemplatepath=$tmp[1];
+    }
 
 	// Search template files
-	$file = '';
-	$classname = '';
-	$filefound = 0;
-	$dirmodels = array('/');
-	if (is_array($conf->modules_parts['models'])) $dirmodels = array_merge($dirmodels, $conf->modules_parts['models']);
-	foreach ($dirmodels as $reldir) {
-		foreach (array('doc', 'pdf') as $prefix) {
-			$file = $prefix . "_" . $modele . ".modules.php";
+	$file=''; $classname=''; $filefound=0;
+	$dirmodels=array('/');
+	if (is_array($conf->modules_parts['models'])) $dirmodels=array_merge($dirmodels,$conf->modules_parts['models']);
+	foreach($dirmodels as $reldir)
+	{
+    	foreach(array('doc','pdf') as $prefix)
+    	{
+    	    $file = $prefix."_".$modele.".modules.php";
 
-			// On verifie l'emplacement du modele
-			//echo $reldir."core/modules/facture/doc/".$file.'<br>';
-			$file = dol_buildpath($reldir . "core/modules/lcr/doc/" . $file, 0);
-			if (file_exists($file)) {
-				$filefound = 1;
-				$classname = $prefix . '_' . $modele;
-				break;
-			}
-		}
-		if ($filefound) break;
-	}
+    		// On verifie l'emplacement du modele
+    		//echo $reldir."core/modules/facture/doc/".$file.'<br>';
+	        $file=dol_buildpath($reldir."core/modules/lcr/doc/".$file,0);
+    		if (file_exists($file))
+    		{
+    			$filefound=1;
+    			$classname=$prefix.'_'.$modele;
+    			break;
+    		}
+    	}
+    	if ($filefound) break;
+    }
 
 	// Charge le modele
-	if ($filefound) {
+	if ($filefound)
+	{
 		require_once $file;
 
 		$obj = new $classname($db);
 
 		// Appel des triggers
 		include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
-		$interface = new Interfaces($db);
-		$result = $interface->run_triggers('BEFORE_BILL_BUILDDOC', $object, $user, $langs, $conf);
-		if ($result < 0) {
-			$error++;
-			$errors = $interface->errors;
-		}
+		$interface=new Interfaces($db);
+		$result=$interface->run_triggers('BEFORE_BILL_LCR_BUILDDOC',$object,$user,$langs,$conf);
+		if ($result < 0) { $error++; $errors=$interface->errors; }
 		// Fin appel triggers
 
 		// We save charset_output to restore it because write_file can change it if needed for
 		// output format that does not support UTF8.
-		$sav_charset_output = $outputlangs->charset_output;
-		if ($obj->write_file($object, $outputlangs, $srctemplatepath, $hidedetails, $hidedesc, $hideref) > 0) {
-			$outputlangs->charset_output = $sav_charset_output;
+		$sav_charset_output=$outputlangs->charset_output;
+		if ($obj->write_file($object, $outputlangs, $srctemplatepath, $hidedetails, $hidedesc, $hideref, $TtoGenerate) > 0)
+		{
+			$outputlangs->charset_output=$sav_charset_output;
 
 			// We delete old preview
-			require_once DOL_DOCUMENT_ROOT . '/core/lib/files.lib.php';
+			require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 			//dol_delete_preview($object);
 
 			// Success in building document. We build meta file.
@@ -245,23 +246,24 @@ function lcr_pdf_create($db, $object, $modele, $outputlangs, $hidedetails = 0, $
 
 			// Appel des triggers
 			include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
-			$interface = new Interfaces($db);
-			$result = $interface->run_triggers('BILL_BUILDDOC', $object, $user, $langs, $conf);
-			if ($result < 0) {
-				$error++;
-				$errors = $interface->errors;
-			}
+			$interface=new Interfaces($db);
+			$result=$interface->run_triggers('BILL_LCR_BUILDDOC',$object,$user,$langs,$conf);
+			if ($result < 0) { $error++; $errors=$interface->errors; }
 			// Fin appel triggers
 
 			return 1;
-		} else {
-			$outputlangs->charset_output = $sav_charset_output;
-			dol_print_error($db, "lcr_pdf_create Error: " . $obj->error);
+		}
+		else
+		{
+			$outputlangs->charset_output=$sav_charset_output;
+			dol_print_error($db,"lcr_pdf_create Error: ".$obj->error);
 			return -1;
 		}
 
-	} else {
-		dol_print_error('', $langs->trans("Error") . " " . $langs->trans("ErrorFileDoesNotExists", $file));
+	}
+	else
+	{
+		dol_print_error('',$langs->trans("Error")." ".$langs->trans("ErrorFileDoesNotExists",$file));
 		return -1;
 	}
 }
