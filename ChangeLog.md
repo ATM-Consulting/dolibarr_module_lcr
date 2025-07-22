@@ -2,7 +2,8 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
-
+- NEW : Compat V21
+  + Fixed LCR fusion generation - **04/07/2025** - 3.3
 
 ## Version 3.1
 - FIX : Correction phpmin en 7 - *05/09/2024* - 3.2

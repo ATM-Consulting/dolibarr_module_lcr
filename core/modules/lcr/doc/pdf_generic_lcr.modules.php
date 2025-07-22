@@ -330,7 +330,20 @@ class pdf_generic_lcr extends ModelePDFFactures {
 		    $pdf->SetFont('','', $default_font_size - 1);
 		    $pdf->MultiCell($widthrecbox-2, 4, $carac_emetteur, 0, 'L');
 
+			// Recipient name
+			if (!empty($usecontact)) {
+				// On peut utiliser le nom de la societe du contact
+				if (getDolGlobalInt('MAIN_USE_COMPANY_NAME_OF_CONTACT', 0)) {
+					$socname = $object->contact->socname;
+				} else {
+					$socname = $object->client->nom;
+				}
+				$carac_client_name = $outputlangs->convToOutputCharset($socname);
+			} else {
+				$carac_client_name = $outputlangs->convToOutputCharset($object->client->nom);
+			}
 
+			$carac_client = pdf_build_address($outputlangs, $this->emetteur, (!empty($object->thirdparty) ? $object->thirdparty : $object->client), ($usecontact ? $object->contact : ''), $usecontact, 'target');
 
 		    // If BILLING contact defined on invoice, we use it
 		    $usecontact=false;
@@ -388,7 +401,7 @@ class pdf_generic_lcr extends ModelePDFFactures {
 	{
 		global $db, $conf;
 
-		//Gestion LCR /////////////////////////////////////////////////////////////////////
+		//Gestion LCR
 
 		$pdf->AddPage();
 		$posy =50;
@@ -731,7 +744,7 @@ class pdf_generic_lcr extends ModelePDFFactures {
 
 		}
 
-//fin mb ///////////
+//fin mb
 	}
 
 }

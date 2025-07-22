@@ -5,3 +5,9 @@ ATMAbout = This module has been developed by <a href="http://www.atm-consulting.
 
 lcrSetup = lcr module setup
 lcrAbout = About lcr
+
+LCR_ERROROPENFILE = Iunable to open file
+LCR_ERRORCREATFILE = unable to create file %s
+LCR_GENERATEFILE = Generate LCR Files
+LCR_FUSIONLCR = Fusion LCR
+LCR_SELECTINVOICE = Could you choose one invoice
