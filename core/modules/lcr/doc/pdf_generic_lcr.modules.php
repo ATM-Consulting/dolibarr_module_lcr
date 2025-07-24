@@ -91,7 +91,7 @@ class pdf_generic_lcr extends ModelePDFFactures {
 
 
 
-	function write_file($object,$outputlangs,$srctemplatepath='',$hidedetails=0,$hidedesc=0,$hideref=0, &$TtoGenerate)
+	function write_file($object,$outputlangs,$srctemplatepath='',$hidedetails=0,$hidedesc=0,$hideref=0)
 	{
 		global $user,$langs,$conf,$mysoc,$db,$hookmanager;
 
@@ -124,7 +124,7 @@ class pdf_generic_lcr extends ModelePDFFactures {
                 $pdf=pdf_getInstance($this->format);
 				$pdf->SetAutoPageBreak(1,0);
 
-				$this->_showLCR($pdf, $object, $outputlangs, $TtoGenerate);
+				$this->_showLCR($pdf, $object, $outputlangs, $object->TtoGenerate);
 
 				$pdf->Close();
 

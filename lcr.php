@@ -278,24 +278,10 @@ if ($action == "builddoc" && $user->hasRight('facture','lire')  && ! GETPOST('bu
 
 		dol_include_once('/lcr/core/modules/lcr/modules_lcr.php');
 
-		//$doc = new generic_pdf_lcr($db);
 		$TtoGenerate = $_REQUEST['toGenerate'];
 		$object = new Facture($db);
-		$result = lcr_pdf_create($db, $object, 'generic_lcr', $outputlangs, '', '', '', $TtoGenerate);
-
-		// Add all others
-		/*foreach($files as $file)
-		{
-			// Charge un document PDF depuis un fichier.
-			$pagecount = $pdf->setSourceFile($file);
-			for ($i = 1; $i <= $pagecount; $i++)
-			{
-				$tplidx = $pdf->importPage($i);
-				$s = $pdf->getTemplatesize($tplidx);
-				$pdf->AddPage($s['h'] > $s['w'] ? 'P' : 'L');
-				$pdf->useTemplate($tplidx);
-			}
-		}*/
+		$object->TtoGenerate = $TtoGenerate;
+		$result = lcr_pdf_create($db, $object, 'generic_lcr', $outputlangs, '', '', '');
 
 		// Create output dir if not exists
 		dol_mkdir($diroutputpdf);
