@@ -62,7 +62,11 @@ class modlcr extends DolibarrModules
 		// Module description, used if translation string 'ModuleXXXDesc' not found (where XXX is value of numeric property 'numero' of module)
 		$this->description = "Module de gestion des traites (LCR). Il permet la génération de pdf avec une ou plusieurs LCR par page. Il permet aussi la génération d'un fichier CSV";
 		// Possible values for version are: 'development', 'experimental', 'dolibarr' or version
-		$this->version = '3.2';
+<<<<<<< HEAD
+		$this->version = '1.1';
+=======
+		$this->version = '3.1.2';
+>>>>>>> 69c34df364732596506422be282d0cc1f2ae5479
 		// Key used in llx_const table to save module status enabled/disabled (where MYMODULE is value of property name of module in uppercase)
 		$this->const_name = 'MAIN_MODULE_'.strtoupper($this->name);
 		// Where to store the module in setup page (0=common,1=interface,2=others,3=very specific)
@@ -91,7 +95,16 @@ class modlcr extends DolibarrModules
 		//							'dir' => array('output' => 'othermodulename'),      // To force the default directories names
 		//							'workflow' => array('WORKFLOW_MODULE1_YOURACTIONTYPE_MODULE2'=>array('enabled'=>'! empty($conf->module1->enabled) && ! empty($conf->module2->enabled)', 'picto'=>'yourpicto@lcr')) // Set here all workflow context managed by module
 		//                        );
-		$this->module_parts = array('models'=>1, 'dir'=>array('output', 'lcr'));
+		$this->module_parts = array(
+			'models'=>1,
+			'dir'=>array('output', 'lcr'),
+			'hooks' => array(
+				   'data' => array(
+					   'formfile',
+				   ),
+				//   'entity' => '0',
+			),
+		);
 
 		// Data directories to create when module is enabled.
 		// Example: this->dirs = array("/lcr/temp");
@@ -185,7 +198,7 @@ class modlcr extends DolibarrModules
 		// $r++;
 		$this->rights[$r][0] = $this->numero . $r;	// Permission id (must not be already used)
 		$this->rights[$r][1] = 'Télécharger les fichiers PDF et CSV des LCR';	// Permission label
-		$this->rights[$r][3] = 1; 					// Permission by default for new user (0/1)
+		$this->rights[$r][3] = 0; 					// Permission by default for new user (0/1)
 		$this->rights[$r][4] = 'read';				// In php code, permission will be checked by test if ($user->rights->permkey->level1->level2)
 		$r++;
 
